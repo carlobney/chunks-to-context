@@ -4,14 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>From Chunks to Context</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0a;
-      --fg: #e8e8e8;
-      --accent: #6366f1;
-      --muted: #888;
-      --code-bg: #1a1a2e;
-      --border: #333;
+      --bg: #000;
+      --fg: #fff;
+      --fg-muted: #888;
+      --fg-dim: #555;
+      --accent: #f97316;
+      --accent-dim: rgba(249, 115, 22, 0.15);
+      --surface: #0a0a0a;
+      --surface-2: #141414;
+      --surface-3: #1a1a1a;
+      --border: #262626;
+      --border-light: #333;
+      --success: #22c55e;
+      --error: #ef4444;
     }
     
     * {
@@ -25,116 +35,70 @@
     }
     
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
       color: var(--fg);
-      line-height: 1.6;
-      font-size: 18px;
+      line-height: 1.65;
+      font-size: 17px;
+      -webkit-font-smoothing: antialiased;
     }
     
     .slide {
       min-height: 100vh;
-      padding: 4rem 2rem;
+      padding: 5rem 2rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      max-width: 900px;
+      max-width: 880px;
       margin: 0 auto;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .slide:last-child {
-      border-bottom: none;
     }
     
     .slide.title-slide {
       text-align: center;
+      justify-content: center;
     }
     
     h1 {
-      font-size: 2.8rem;
+      font-size: 3.5rem;
       font-weight: 700;
-      margin-bottom: 1rem;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
     }
     
     h2 {
       font-size: 2rem;
       font-weight: 600;
-      margin-bottom: 1.5rem;
-      color: var(--accent);
-      letter-spacing: -0.01em;
+      margin-bottom: 2rem;
+      letter-spacing: -0.02em;
     }
     
     h3 {
-      font-size: 1.4rem;
+      font-size: 1.25rem;
       font-weight: 600;
-      margin-top: 2rem;
+      margin-top: 2.5rem;
       margin-bottom: 1rem;
+      color: var(--fg);
     }
     
     .subtitle {
-      color: var(--muted);
-      font-size: 1.2rem;
-      font-style: italic;
+      color: var(--fg-muted);
+      font-size: 1.3rem;
+      margin-top: 1rem;
+    }
+    
+    .tagline {
+      color: var(--fg-dim);
+      font-size: 1rem;
+      margin-top: 3rem;
     }
     
     p {
-      margin-bottom: 1.2rem;
-    }
-    
-    .quote {
-      font-style: italic;
-      color: var(--muted);
-      border-left: 3px solid var(--accent);
-      padding-left: 1.5rem;
-      margin: 1.5rem 0;
-    }
-    
-    .big-quote {
-      font-size: 1.5rem;
-      font-weight: 500;
+      margin-bottom: 1.25rem;
       color: var(--fg);
-      text-align: center;
-      padding: 2rem;
-      background: var(--code-bg);
-      border-radius: 8px;
-      margin: 2rem 0;
     }
     
-    pre {
-      background: var(--code-bg);
-      padding: 1.5rem;
-      border-radius: 8px;
-      overflow-x: auto;
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: 0.9rem;
-      line-height: 1.5;
-      margin: 1.5rem 0;
-    }
-    
-    code {
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      background: var(--code-bg);
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      font-size: 0.9em;
-    }
-    
-    ul, ol {
-      margin: 1rem 0 1.5rem 1.5rem;
-    }
-    
-    li {
-      margin-bottom: 0.5rem;
-    }
-    
-    .checkmark {
-      color: #22c55e;
-    }
-    
-    .xmark {
-      color: #ef4444;
+    .muted {
+      color: var(--fg-muted);
     }
     
     strong {
@@ -142,26 +106,425 @@
       font-weight: 600;
     }
     
-    .problem {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      padding: 1.5rem;
-      border-radius: 8px;
-      border-left: 4px solid #ef4444;
-      margin: 1.5rem 0;
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--surface-2);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: var(--fg);
     }
     
-    .insight {
-      background: linear-gradient(135deg, #1a1a2e 0%, #0f2027 100%);
-      padding: 1.5rem;
-      border-radius: 8px;
-      border-left: 4px solid var(--accent);
-      margin: 1.5rem 0;
+    /* Quote styles */
+    .quote {
+      font-size: 1.4rem;
+      font-style: italic;
+      color: var(--fg-muted);
+      border-left: 3px solid var(--accent);
+      padding-left: 1.5rem;
+      margin: 2rem 0;
     }
     
+    .big-quote {
+      font-size: 1.5rem;
+      font-weight: 500;
+      text-align: center;
+      padding: 2.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin: 2.5rem 0;
+    }
+    
+    .big-quote em {
+      color: var(--accent);
+      font-style: normal;
+    }
+    
+    /* Lists */
+    ul, ol {
+      margin: 1rem 0 1.5rem 1.25rem;
+    }
+    
+    li {
+      margin-bottom: 0.6rem;
+      color: var(--fg);
+    }
+    
+    li .check {
+      color: var(--success);
+      margin-left: 0.5rem;
+    }
+    
+    li .x {
+      color: var(--error);
+      margin-left: 0.5rem;
+    }
+    
+    /* Problem/Insight boxes */
+    .callout {
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin: 1.5rem 0;
+      border: 1px solid var(--border);
+    }
+    
+    .callout.problem {
+      background: var(--surface);
+      border-left: 3px solid var(--error);
+    }
+    
+    .callout.insight {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+    }
+    
+    .callout p:last-child {
+      margin-bottom: 0;
+    }
+    
+    /* Chat UI mockup */
+    .chat-ui {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 2rem 0;
+    }
+    
+    .chat-header {
+      background: var(--surface-2);
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .chat-header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+    
+    .chat-messages {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .chat-msg {
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      max-width: 85%;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    
+    .chat-msg.user {
+      background: var(--accent);
+      color: #000;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    
+    .chat-msg.ai {
+      background: var(--surface-3);
+      color: var(--fg);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    
+    /* File tree UI */
+    .file-tree {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 2rem 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+    
+    .file-tree-header {
+      background: var(--surface-2);
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--fg-muted);
+    }
+    
+    .file-tree-header .dots {
+      display: flex;
+      gap: 6px;
+    }
+    
+    .file-tree-header .dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border-light);
+    }
+    
+    .file-tree-content {
+      padding: 1rem;
+    }
+    
+    .file-item {
+      padding: 0.3rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--fg);
+    }
+    
+    .file-item.indent-1 { padding-left: 1.5rem; }
+    .file-item.indent-2 { padding-left: 3rem; }
+    .file-item.indent-3 { padding-left: 4.5rem; }
+    
+    .file-item .icon {
+      font-size: 1rem;
+    }
+    
+    .file-item.folder .icon { color: var(--accent); }
+    .file-item.file .icon { color: var(--fg-muted); }
+    
+    /* Database/Table UI */
+    .db-ui {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 2rem 0;
+    }
+    
+    .db-header {
+      background: var(--surface-2);
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .db-header .icon {
+      color: var(--accent);
+    }
+    
+    .db-table {
+      width: 100%;
+      font-size: 0.9rem;
+    }
+    
+    .db-table th {
+      text-align: left;
+      padding: 0.6rem 1rem;
+      color: var(--fg-muted);
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .db-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .db-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .db-tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+    
+    .db-relation {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    
+    /* Graph visualization */
+    .graph-ui {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 280px;
+    }
+    
+    .graph-nodes {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 220px;
+    }
+    
+    .graph-node {
+      position: absolute;
+      background: var(--surface-3);
+      border: 2px solid var(--border-light);
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    .graph-node.highlight {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    
+    .graph-edge {
+      position: absolute;
+      background: var(--border-light);
+      transform-origin: left center;
+    }
+    
+    .graph-edge.highlight {
+      background: var(--accent);
+    }
+    
+    /* Slack-style UI */
+    .slack-ui {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 2rem 0;
+      display: flex;
+    }
+    
+    .slack-sidebar {
+      width: 180px;
+      background: var(--surface-2);
+      border-right: 1px solid var(--border);
+      padding: 1rem 0;
+    }
+    
+    .slack-channel {
+      padding: 0.4rem 1rem;
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    
+    .slack-channel.active {
+      background: var(--accent-dim);
+      color: var(--fg);
+    }
+    
+    .slack-channel .hash {
+      color: var(--fg-dim);
+    }
+    
+    .slack-main {
+      flex: 1;
+      padding: 1rem;
+    }
+    
+    .slack-thread {
+      border-left: 2px solid var(--border);
+      padding-left: 1rem;
+      margin: 0.5rem 0;
+    }
+    
+    .slack-msg {
+      font-size: 0.9rem;
+      color: var(--fg);
+      margin-bottom: 0.5rem;
+    }
+    
+    .slack-msg .user {
+      font-weight: 600;
+      color: var(--fg);
+      margin-right: 0.5rem;
+    }
+    
+    .slack-msg .time {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+    }
+    
+    /* Excel-style UI */
+    .excel-ui {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 2rem 0;
+    }
+    
+    .excel-tabs {
+      display: flex;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .excel-tab {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      border-right: 1px solid var(--border);
+    }
+    
+    .excel-tab.active {
+      background: var(--surface);
+      color: var(--fg);
+    }
+    
+    .excel-grid {
+      display: grid;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+    
+    .excel-row {
+      display: contents;
+    }
+    
+    .excel-cell {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    
+    .excel-cell.header {
+      background: var(--surface-2);
+      color: var(--fg-muted);
+      font-weight: 500;
+    }
+    
+    .excel-cell.formula {
+      color: var(--accent);
+    }
+    
+    /* Comparison grid */
     .comparison {
       display: grid;
       gap: 1rem;
-      margin: 1.5rem 0;
+      margin: 2rem 0;
     }
     
     @media (min-width: 640px) {
@@ -171,54 +534,187 @@
     }
     
     .comparison-item {
-      background: var(--code-bg);
+      background: var(--surface);
+      border: 1px solid var(--border);
       padding: 1.5rem;
-      border-radius: 8px;
+      border-radius: 10px;
     }
     
     .comparison-item h4 {
-      font-size: 1rem;
-      margin-bottom: 0.75rem;
-      color: var(--muted);
-    }
-    
-    .summary-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1.5rem 0;
-      font-size: 0.95rem;
-    }
-    
-    .summary-table th,
-    .summary-table td {
-      padding: 0.75rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .summary-table th {
-      color: var(--muted);
-      font-weight: 500;
       font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      margin-bottom: 1rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
     
+    .comparison-item p {
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+    
+    .comparison-item ul {
+      margin: 0;
+      padding-left: 1rem;
+    }
+    
+    /* Summary table */
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.95rem;
+    }
+    
+    .summary-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      color: var(--fg-muted);
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .summary-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .summary-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* Tool comparison table */
+    .tool-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      font-size: 0.9rem;
+    }
+    
+    .tool-table th {
+      text-align: left;
+      padding: 0.75rem;
+      color: var(--fg-muted);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--border);
+    }
+    
+    .tool-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .tool-table .tool-name {
+      font-weight: 600;
+    }
+    
+    .tool-table .quality-bad {
+      color: var(--error);
+    }
+    
+    .tool-table .quality-ok {
+      color: var(--fg-muted);
+    }
+    
+    .tool-table .quality-good {
+      color: var(--success);
+    }
+    
+    /* Bottom line box */
     .bottom-line {
-      background: linear-gradient(135deg, #1a1a2e 0%, #1e1b4b 100%);
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
       padding: 2rem;
       border-radius: 12px;
-      margin-top: 2rem;
+      margin: 2.5rem 0;
+    }
+    
+    .bottom-line h4 {
+      font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
     }
     
     .bottom-line ol {
-      margin-left: 1.2rem;
+      margin: 0;
+      padding-left: 1.25rem;
     }
     
     .bottom-line li {
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
     }
     
+    .final-statement {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    
+    /* Flow diagram */
+    .flow-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+    
+    .flow-step {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .flow-step.highlight {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    
+    .flow-arrow {
+      text-align: center;
+      color: var(--fg-dim);
+      padding: 0.25rem 0;
+      font-size: 1.25rem;
+    }
+    
+    .flow-branch {
+      display: flex;
+      gap: 1rem;
+      margin: 0.5rem 0;
+    }
+    
+    .flow-branch > div {
+      flex: 1;
+    }
+    
+    /* Pre/code blocks */
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      margin: 1.5rem 0;
+    }
+    
+    /* Navigation */
     .nav {
       position: fixed;
       bottom: 2rem;
@@ -229,60 +725,84 @@
     }
     
     .nav button {
-      background: var(--code-bg);
+      background: var(--surface);
       border: 1px solid var(--border);
       color: var(--fg);
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       cursor: pointer;
-      font-size: 1.2rem;
-      transition: all 0.2s;
+      font-size: 1.1rem;
+      transition: all 0.15s ease;
     }
     
     .nav button:hover {
       background: var(--accent);
       border-color: var(--accent);
+      color: #000;
     }
     
     .progress {
       position: fixed;
       top: 0;
       left: 0;
-      height: 3px;
+      height: 2px;
       background: var(--accent);
       z-index: 100;
       transition: width 0.1s;
     }
     
-    @media (max-width: 640px) {
+    /* Responsive */
+    @media (max-width: 768px) {
       .slide {
-        padding: 3rem 1.5rem;
+        padding: 3rem 1.25rem;
       }
       
       h1 {
-        font-size: 2rem;
+        font-size: 2.25rem;
       }
       
       h2 {
         font-size: 1.5rem;
       }
       
-      pre {
-        font-size: 0.75rem;
+      .slack-ui {
+        flex-direction: column;
+      }
+      
+      .slack-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        overflow-x: auto;
+        padding: 0.5rem;
+      }
+      
+      .slack-channel {
+        white-space: nowrap;
+      }
+      
+      .graph-ui {
         padding: 1rem;
+        min-height: 200px;
+      }
+      
+      .graph-nodes {
+        transform: scale(0.75);
+        transform-origin: center;
       }
     }
   </style>
 </head>
 <body>
   <div class="progress" id="progress"></div>
-  
+
   <!-- Slide 1: Title -->
   <section class="slide title-slide">
-    <h1>From Chunks to Context</h1>
+    <h1>From Chunks<br>to Context</h1>
     <p class="subtitle">The AI Retrieval Problem</p>
-    <p style="margin-top: 3rem; color: var(--muted);">A teaching progression for operators thinking about AI and knowledge management</p>
+    <p class="tagline">A teaching progression for operators thinking about AI and knowledge management</p>
   </section>
 
   <!-- Slide 2: The Frustration -->
@@ -291,62 +811,91 @@
     <p class="quote">"Claude seems to do a worse job reading across conversations."</p>
     <p>Most people's first experience with AI is a chat interface. Messages streaming by. You ask, it answers.</p>
     <p>Each message in a conversation is a <strong>chunk</strong>. Easy to visualize:</p>
-    <pre>┌─────────────────────────────────┐
-│ You: How should we price the   │
-│      course?                   │
-├─────────────────────────────────┤
-│ AI: Based on market rates...   │
-│     $299-500 range...          │
-├─────────────────────────────────┤
-│ You: What about enterprise?    │
-├─────────────────────────────────┤
-│ AI: For enterprise bundles...  │
-└─────────────────────────────────┘</pre>
-    <p>Now imagine hundreds of these conversations. You want to find something.</p>
+    
+    <div class="chat-ui">
+      <div class="chat-header">
+        <span class="dot"></span>
+        Claude
+      </div>
+      <div class="chat-messages">
+        <div class="chat-msg user">How should we price the course?</div>
+        <div class="chat-msg ai">Based on market rates... $299-500 range seems reasonable for the value you're delivering...</div>
+        <div class="chat-msg user">What about enterprise?</div>
+        <div class="chat-msg ai">For enterprise bundles, typically 10-seat minimums at $35K...</div>
+      </div>
+    </div>
+    
+    <p class="muted">Now imagine hundreds of these conversations. You want to find something.</p>
   </section>
 
   <!-- Slide 3: Level 0 -->
   <section class="slide">
     <h2>Level 0: Keyword Search</h2>
-    <p>You search: <code>"pricing"</code></p>
+    <p>You search: <code>pricing</code></p>
     <p><strong>What you get:</strong> Every chunk that contains the word "pricing"</p>
     <ul>
-      <li>That conversation about course pricing <span class="checkmark">✓</span></li>
-      <li>That conversation about your SaaS pricing strategy <span class="checkmark">✓</span></li>
-      <li>That conversation about grocery prices for your wife's bakery <span class="xmark">✗</span></li>
-      <li>That random mention of "pricing pressure" in an unrelated discussion <span class="xmark">✗</span></li>
+      <li>That conversation about course pricing <span class="check">✓</span></li>
+      <li>That conversation about your SaaS pricing strategy <span class="check">✓</span></li>
+      <li>That conversation about grocery prices for your wife's bakery <span class="x">✗</span></li>
+      <li>That random mention of "pricing pressure" in an unrelated discussion <span class="x">✗</span></li>
     </ul>
-    <div class="problem">
-      <strong>The problem:</strong> Keywords match text, not meaning. You get noise. You miss relevant chunks that used different words ("cost," "rate," "what should we charge").
+    <div class="callout problem">
+      <p><strong>The problem:</strong> Keywords match text, not meaning. You get noise. You miss relevant chunks that used different words ("cost," "rate," "what should we charge").</p>
     </div>
   </section>
 
-  <!-- Slide 4: Level 1 -->
+  <!-- Slide 4: Level 1 - Embeddings -->
   <section class="slide">
     <h2>Level 1: Embedding Space</h2>
     <p>Instead of keywords, we place each chunk in <strong>meaning space</strong>.</p>
-    <pre>              BUSINESS
-                  ↑
-                  │
-    ┌─────────────┼─────────────┐
-    │  ●pricing   │  ●strategy  │
-    │  ●course    │  ●clients   │
-    │             │             │
-FINANCIAL─────────┼─────────────→ VALUES
-    │             │             │
-    │  ●expenses  │  ●goals     │
-    │  ●revenue   │  ●family    │
-    └─────────────┼─────────────┘
-                  │
-              PERSONAL</pre>
-    <p>Search: <code>"how much should I charge for workshops"</code></p>
+    
+    <div class="graph-ui">
+      <svg viewBox="0 0 400 250" style="width: 100%; max-width: 400px;">
+        <!-- Axes -->
+        <line x1="200" y1="20" x2="200" y2="230" stroke="#333" stroke-width="2"/>
+        <line x1="20" y1="125" x2="380" y2="125" stroke="#333" stroke-width="2"/>
+        
+        <!-- Labels -->
+        <text x="200" y="15" fill="#666" font-size="12" text-anchor="middle">BUSINESS</text>
+        <text x="200" y="245" fill="#666" font-size="12" text-anchor="middle">PERSONAL</text>
+        <text x="15" y="125" fill="#666" font-size="12" text-anchor="middle" transform="rotate(-90, 15, 125)">FINANCIAL</text>
+        <text x="385" y="125" fill="#666" font-size="12" text-anchor="middle" transform="rotate(90, 385, 125)">VALUES</text>
+        
+        <!-- Dots - Business/Financial quadrant -->
+        <circle cx="120" cy="60" r="8" fill="#f97316"/>
+        <text x="120" y="45" fill="#fff" font-size="11" text-anchor="middle">pricing</text>
+        <circle cx="150" cy="85" r="6" fill="#f97316" opacity="0.7"/>
+        <text x="150" y="100" fill="#888" font-size="10" text-anchor="middle">course</text>
+        
+        <!-- Dots - Business/Values quadrant -->
+        <circle cx="280" cy="55" r="6" fill="#666"/>
+        <text x="280" y="45" fill="#888" font-size="10" text-anchor="middle">strategy</text>
+        <circle cx="310" cy="80" r="6" fill="#666"/>
+        <text x="310" y="95" fill="#888" font-size="10" text-anchor="middle">clients</text>
+        
+        <!-- Dots - Personal/Financial quadrant -->
+        <circle cx="100" cy="180" r="6" fill="#666"/>
+        <text x="100" y="195" fill="#888" font-size="10" text-anchor="middle">expenses</text>
+        <circle cx="160" cy="190" r="6" fill="#666"/>
+        <text x="160" y="205" fill="#888" font-size="10" text-anchor="middle">revenue</text>
+        
+        <!-- Dots - Personal/Values quadrant -->
+        <circle cx="290" cy="175" r="6" fill="#666"/>
+        <text x="290" y="190" fill="#888" font-size="10" text-anchor="middle">goals</text>
+        <circle cx="330" cy="195" r="6" fill="#666"/>
+        <text x="330" y="210" fill="#888" font-size="10" text-anchor="middle">family</text>
+      </svg>
+    </div>
+    
+    <p>Search: <code>how much should I charge for workshops</code></p>
     <p>→ Finds the pricing conversation even though you never said "charge" or "workshops" in that thread</p>
-    <div class="insight">
-      <strong>This is what embeddings do.</strong> They place chunks in n-dimensional space based on meaning, so similar concepts cluster together.
+    
+    <div class="callout insight">
+      <p><strong>This is what embeddings do.</strong> They place chunks in n-dimensional space based on meaning, so similar concepts cluster together.</p>
     </div>
   </section>
 
-  <!-- Slide 5: Level 2 -->
+  <!-- Slide 5: Level 2 - Context Window -->
   <section class="slide">
     <h2>Level 2: The Context Window Constraint</h2>
     <p>Here's the practical constraint: When you ask AI a question, you have limited space to give it context. Maybe 100K tokens. Maybe 200K. Not infinite.</p>
@@ -366,11 +915,17 @@ FINANCIAL─────────┼─────────────�
   <section class="slide">
     <h2>Level 3: Chunk Alone</h2>
     <p>The system retrieves:</p>
-    <pre>"I think $299 is too low for the value we deliver, 
-but $500 might price out individual buyers."</pre>
+    
+    <div class="chat-ui">
+      <div class="chat-header">Retrieved chunk</div>
+      <div class="chat-messages">
+        <div class="chat-msg ai">"I think $299 is too low for the value we deliver, but $500 might price out individual buyers."</div>
+      </div>
+    </div>
+    
     <p>AI summarizes:</p>
     <p class="quote">"Discussion about pricing something between $299-500."</p>
-    <p>That's... not wrong. But it's thin. What are we pricing? For whom? What's the context?</p>
+    <p class="muted">That's... not wrong. But it's thin. What are we pricing? For whom? What's the context?</p>
   </section>
 
   <!-- Slide 7: Chunk + Thread -->
@@ -384,8 +939,8 @@ but $500 might price out individual buyers."</pre>
     </ul>
     <p>AI summarizes:</p>
     <p class="quote">"From a course pricing discussion—considering $299-500 range, weighing individual buyer accessibility against value delivery. Thread concluded with tiered pricing decision."</p>
-    <div class="insight">
-      <strong>Much better.</strong> The thread gives context that the chunk alone doesn't have.
+    <div class="callout insight">
+      <p><strong>Much better.</strong> The thread gives context that the chunk alone doesn't have.</p>
     </div>
   </section>
 
@@ -393,22 +948,35 @@ but $500 might price out individual buyers."</pre>
   <section class="slide">
     <h2>Level 3: Chunk + Tree Structure</h2>
     <p>Now the system also knows where this conversation lives in YOUR structure:</p>
-    <ul>
-      <li>Under: Business / Obney / Products / AI Course / Pricing</li>
-      <li>Sibling conversations: "Enterprise Pricing," "Scholarship Options"</li>
-      <li>Parent context: This is a 10-week technical course for developers</li>
-    </ul>
+    
+    <div class="file-tree">
+      <div class="file-tree-header">
+        <div class="dots"><span></span><span></span><span></span></div>
+        Your Knowledge Base
+      </div>
+      <div class="file-tree-content">
+        <div class="file-item folder"><span class="icon">📁</span> Business</div>
+        <div class="file-item folder indent-1"><span class="icon">📁</span> Obney</div>
+        <div class="file-item folder indent-2"><span class="icon">📁</span> Products</div>
+        <div class="file-item folder indent-3" style="color: var(--accent);"><span class="icon">📁</span> AI Course</div>
+        <div class="file-item file indent-3" style="color: var(--accent);"><span class="icon">💬</span> Pricing ← you are here</div>
+        <div class="file-item file indent-3"><span class="icon">💬</span> Enterprise Pricing</div>
+        <div class="file-item file indent-3"><span class="icon">💬</span> Scholarship Options</div>
+      </div>
+    </div>
+    
     <p>AI summarizes:</p>
-    <p class="quote">"Pricing discussion for Obney's AI Engineering Course (10-week technical program). Settled on $299-500 individual range. Related threads cover enterprise bundles and scholarship access. Part of broader course launch planning."</p>
-    <div class="insight">
-      <strong>The tree structure tells the AI what this chunk is about without you having to explain.</strong>
+    <p class="quote">"Pricing discussion for Obney's AI Engineering Course (10-week technical program). Settled on $299-500 individual range. Related threads cover enterprise bundles and scholarship access."</p>
+    <div class="callout insight">
+      <p><strong>The tree structure tells the AI what this chunk is about without you having to explain.</strong></p>
     </div>
   </section>
 
   <!-- Slide 9: Chunk + Audience -->
   <section class="slide">
     <h2>Level 3: Chunk + Who's Asking</h2>
-    <p>Now the system knows <em>you're</em> asking vs. a team member vs. an investor:</p>
+    <p>Now the system knows <em>who's</em> asking:</p>
+    
     <div class="comparison">
       <div class="comparison-item">
         <h4>For you (the CEO)</h4>
@@ -419,10 +987,12 @@ but $500 might price out individual buyers."</pre>
         <p>"Course pricing is $299/$349 individual, $35K enterprise bundle. Need to set up payment processing for both tiers."</p>
       </div>
     </div>
-    <div class="comparison-item" style="background: var(--code-bg); padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
+    
+    <div class="comparison-item" style="margin-top: 1rem;">
       <h4>For an investor</h4>
       <p>"Course priced at $5K/seat effective rate for enterprise ($35K/10), with $299-349 individual tier for pipeline building."</p>
     </div>
+    
     <p style="margin-top: 1.5rem;"><strong>Same underlying information. Different summary. Based on traversal path and audience.</strong></p>
   </section>
 
@@ -434,9 +1004,10 @@ but $500 might price out individual buyers."</pre>
     <ul>
       <li>Page 1-3: Executive summary</li>
       <li>Page 4-12: Market analysis (you don't care)</li>
-      <li>Page 13-15: The three paragraphs that answer your question</li>
+      <li>Page 13-15: <strong>The three paragraphs that answer your question</strong></li>
       <li>Page 16-41: Appendices</li>
     </ul>
+    
     <div class="comparison">
       <div class="comparison-item">
         <h4>Embed whole document</h4>
@@ -453,9 +1024,10 @@ but $500 might price out individual buyers."</pre>
   <section class="slide">
     <h2>The Intentionality Requirement</h2>
     <div class="big-quote">
-      Without intentionality, you get no control of the chunking strategy.
+      Without intentionality, you get <em>no control</em> of the chunking strategy.
     </div>
     <p>This is why "just dump everything in the AI" doesn't work.</p>
+    
     <div class="comparison">
       <div class="comparison-item">
         <h4>If you're intentional</h4>
@@ -491,149 +1063,430 @@ but $500 might price out individual buyers."</pre>
         <tr>
           <td>Keywords</td>
           <td>Just the matching text</td>
-          <td>Garbage</td>
+          <td style="color: var(--error);">Garbage</td>
         </tr>
         <tr>
           <td>Embeddings</td>
           <td>Chunk meaning</td>
-          <td>Basic</td>
+          <td style="color: var(--fg-muted);">Basic</td>
         </tr>
         <tr>
           <td>+ Thread context</td>
           <td>What conversation this came from</td>
-          <td>Better</td>
+          <td style="color: var(--fg-muted);">Better</td>
         </tr>
         <tr>
           <td>+ Tree structure</td>
           <td>Where it lives in your system</td>
-          <td>Much better</td>
+          <td style="color: var(--success);">Much better</td>
         </tr>
         <tr>
           <td>+ Who's asking</td>
           <td>What they need to know/do</td>
-          <td>Tailored</td>
+          <td style="color: var(--success);">Tailored</td>
         </tr>
         <tr>
           <td>+ Graph connections</td>
           <td>What else relates</td>
-          <td>Full context</td>
+          <td style="color: var(--accent);">Full context</td>
         </tr>
       </tbody>
     </table>
   </section>
 
-  <!-- Slide 13: Agent Loop -->
+  <!-- Slide 13: Google Drive -->
   <section class="slide">
-    <h2>The Agent Retrieval Loop</h2>
-    <p>When an AI agent is trying to answer your question, it's not one grab. It's a loop—and the quality depends on what tools it has.</p>
-    <pre>┌─────────────────────────────────────────┐
-│  Is the answer in my context?           │
-│            │                            │
-│       no / uncertain                    │
-│            ▼                            │
-│  What tools do I have?                  │
-│  (ranked by connectedness)              │
-│                                         │
-│    1. Graph traversal (best)            │
-│    2. Tree-aware search                 │
-│    3. Embedding search                  │
-│    4. Keyword search (worst)            │
-│            │                            │
-│            ▼                            │
-│  Try most connected tool                │
-│            │                            │
-│      Got results? ──no──► Fall back     │
-│            │                            │
-│           yes                           │
-│            ▼                            │
-│  Enough to answer well?                 │
-│      │           │                      │
-│     yes         no ──► Try again        │
-│      │                                  │
-│      ▼                                  │
-│   Answer                                │
-└─────────────────────────────────────────┘</pre>
+    <h2>Tools You Know: Google Drive</h2>
+    <p class="muted">Pure Tree, No Graph</p>
+    
+    <div class="file-tree">
+      <div class="file-tree-header">
+        <div class="dots"><span></span><span></span><span></span></div>
+        My Drive
+      </div>
+      <div class="file-tree-content">
+        <div class="file-item folder"><span class="icon">📁</span> Clients</div>
+        <div class="file-item folder indent-1"><span class="icon">📁</span> Acme</div>
+        <div class="file-item file indent-2"><span class="icon">📄</span> proposal.docx</div>
+        <div class="file-item folder"><span class="icon">📁</span> Templates</div>
+        <div class="file-item file indent-1"><span class="icon">📄</span> proposal-template.docx</div>
+      </div>
+    </div>
+    
+    <p>The Acme proposal was <em>based on</em> the template. But Drive doesn't know that. They're in separate branches.</p>
+    <p>Search "proposal" and you get both with no indication of relationship.</p>
+    <div class="callout problem">
+      <p><strong>That's keyword search on a tree.</strong> No connections. No context. This is why Drive search feels broken even though you "organized" your files.</p>
+    </div>
   </section>
 
-  <!-- Slide 14: Key Insight -->
+  <!-- Slide 14: Excel -->
+  <section class="slide">
+    <h2>Tools You Know: Excel</h2>
+    <p class="muted">Cell References Are Baby Graph Edges</p>
+    
+    <div class="excel-ui">
+      <div class="excel-tabs">
+        <div class="excel-tab active">Dashboard</div>
+        <div class="excel-tab">Q1 Revenue</div>
+        <div class="excel-tab">Q2 Revenue</div>
+      </div>
+      <div class="excel-grid" style="grid-template-columns: 100px 150px 120px;">
+        <div class="excel-row">
+          <div class="excel-cell header"></div>
+          <div class="excel-cell header">A</div>
+          <div class="excel-cell header">B</div>
+        </div>
+        <div class="excel-row">
+          <div class="excel-cell header">1</div>
+          <div class="excel-cell">Q1 Total</div>
+          <div class="excel-cell formula">='Q1 Revenue'!B12</div>
+        </div>
+        <div class="excel-row">
+          <div class="excel-cell header">2</div>
+          <div class="excel-cell">Q2 Total</div>
+          <div class="excel-cell formula">='Q2 Revenue'!B12</div>
+        </div>
+      </div>
+    </div>
+    
+    <p>When you write <code>='Q1 Revenue'!B12</code> you're creating a <strong>connection</strong> between sheets.</p>
+    <p>Now your Dashboard "knows about" Q1 Revenue. Change B12, Dashboard updates.</p>
+    <div class="callout insight">
+      <p><strong>VLOOKUP and INDEX-MATCH are traversal tools.</strong> "Go find the row where column A matches this value, then grab column C." That's graph traversal. People who are "good at Excel" have intuition for connections and traversal.</p>
+    </div>
+  </section>
+
+  <!-- Slide 15: Notion -->
+  <section class="slide">
+    <h2>Tools You Know: Notion</h2>
+    <p class="muted">Database Relations Are Explicit Graph Edges</p>
+    
+    <div class="db-ui">
+      <div class="db-header">
+        <span class="icon">📊</span> Projects
+      </div>
+      <table class="db-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Client</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>API Integration</td>
+            <td><span class="db-relation">→ Acme Corp</span></td>
+            <td><span class="db-tag">Active</span></td>
+          </tr>
+          <tr>
+            <td>Phase 2 Pilot</td>
+            <td><span class="db-relation">→ TechStart</span></td>
+            <td><span class="db-tag">Planning</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <p>When you create a <strong>Relation</strong> between databases, you're building the graph.</p>
+    <p>Now "show me all tasks for Acme's projects" is a <em>traversal</em>, not a search.</p>
+    <div class="callout insight">
+      <p><strong>Linked Database Views</strong> = same data, different projection. Sales sees clients → deals. Delivery sees projects → tasks. Same underlying graph, different trees on top.</p>
+    </div>
+  </section>
+
+  <!-- Slide 16: Obsidian -->
+  <section class="slide">
+    <h2>Tools You Know: Obsidian</h2>
+    <p class="muted">Wiki Links Are Graph Edges</p>
+    
+    <div class="chat-ui">
+      <div class="chat-header">Meeting Notes.md</div>
+      <div class="chat-messages" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
+        <div style="color: var(--fg);">
+          # Meeting with <span style="color: var(--accent);">[[Sarah]]</span> about <span style="color: var(--accent);">[[Acme Pilot]]</span><br><br>
+          Discussed the <span style="color: var(--accent);">[[API Timeout Bug]]</span> - similar to what we saw in <span style="color: var(--accent);">[[TechStart Phase 1]]</span>.
+        </div>
+      </div>
+    </div>
+    
+    <p>Every <code>[[link]]</code> is a graph edge. Obsidian's Graph View literally shows you this.</p>
+    
+    <div class="callout insight">
+      <p><strong>Tags</strong> are another connection layer: <code>#client</code> <code>#issue</code> <code>#resolved</code></p>
+      <p><strong>Folders</strong> give you tree structure on top of the graph.</p>
+      <p style="margin-bottom: 0;">The people who love Obsidian have internalized: <strong>links > folders</strong>. Folders are for your brain. Links are for traversal.</p>
+    </div>
+  </section>
+
+  <!-- Slide 17: Conversation Threads -->
+  <section class="slide">
+    <h2>The Pain Lucas Feels</h2>
+    <p class="muted">Conversation Threads: Isolated Trees</p>
+    
+    <div class="comparison">
+      <div class="chat-ui" style="margin: 0;">
+        <div class="chat-header">Thread 1: Course Pricing</div>
+        <div class="chat-messages">
+          <div class="chat-msg user">How much?</div>
+          <div class="chat-msg ai">$299-500...</div>
+          <div class="chat-msg user">Enterprise?</div>
+          <div class="chat-msg ai">$35K/10...</div>
+        </div>
+      </div>
+      <div class="chat-ui" style="margin: 0;">
+        <div class="chat-header">Thread 2: Acme Issues</div>
+        <div class="chat-messages">
+          <div class="chat-msg user">Bug report</div>
+          <div class="chat-msg ai">Looks like...</div>
+          <div class="chat-msg user">Similar to TechStart?</div>
+          <div class="chat-msg ai">Yes, same...</div>
+        </div>
+      </div>
+    </div>
+    
+    <p style="text-align: center; color: var(--fg-dim); margin: 1rem 0;">↑ No connection between these ↑</p>
+    
+    <div class="callout problem">
+      <p><strong>This is why Claude "seems worse at reading across conversations."</strong></p>
+      <p style="margin-bottom: 0;">It's not Claude—it's that conversations are disconnected trees with no edges between them. The AI can't traverse because there's nothing to traverse.</p>
+    </div>
+  </section>
+
+  <!-- Slide 18: Slack -->
+  <section class="slide">
+    <h2>Tools You Know: Slack</h2>
+    <p class="muted">Channels Are Trees, Threads Are Branches, Links Are Rare</p>
+    
+    <div class="slack-ui">
+      <div class="slack-sidebar">
+        <div class="slack-channel active"><span class="hash">#</span> sales</div>
+        <div class="slack-channel"><span class="hash">#</span> engineering</div>
+        <div class="slack-channel"><span class="hash">#</span> general</div>
+      </div>
+      <div class="slack-main">
+        <div class="slack-msg">
+          <span class="user">Sarah</span>
+          <span class="time">10:32 AM</span>
+          <div>Acme update: they're seeing timeout issues</div>
+        </div>
+        <div class="slack-thread">
+          <div class="slack-msg">
+            <span class="user">Mike</span>
+            <span class="time">10:45 AM</span>
+            <div>Same thing engineering is tracking?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <p>The Acme update in #sales mentions the timeout bug being discussed in #engineering. But Slack doesn't connect them.</p>
+    <div class="callout problem">
+      <p><strong>Slack search is keyword-only across isolated trees.</strong> This is why "finding that thing someone said" is painful. Cross-posting is a weak edge. Linking to a message is a real edge, but people rarely do it.</p>
+    </div>
+  </section>
+
+  <!-- Slide 19: Tool Summary -->
+  <section class="slide">
+    <h2>The Pattern</h2>
+    
+    <table class="tool-table">
+      <thead>
+        <tr>
+          <th>Tool</th>
+          <th>Structure</th>
+          <th>Connections</th>
+          <th>AI Retrieval</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tool-name">Google Drive</td>
+          <td>Tree (folders)</td>
+          <td>None</td>
+          <td class="quality-bad">Keyword lottery</td>
+        </tr>
+        <tr>
+          <td class="tool-name">Email</td>
+          <td>Tree (folders)</td>
+          <td>None</td>
+          <td class="quality-bad">Keyword lottery</td>
+        </tr>
+        <tr>
+          <td class="tool-name">Slack</td>
+          <td>Tree (channels)</td>
+          <td>Rare links</td>
+          <td class="quality-bad">Mostly keyword</td>
+        </tr>
+        <tr>
+          <td class="tool-name">Conversations</td>
+          <td>Tree (threads)</td>
+          <td>None</td>
+          <td class="quality-ok">Keyword + embedding</td>
+        </tr>
+        <tr>
+          <td class="tool-name">Excel</td>
+          <td>Tree (sheets)</td>
+          <td>Cell refs, lookups</td>
+          <td class="quality-ok">Limited traversal</td>
+        </tr>
+        <tr>
+          <td class="tool-name">Obsidian</td>
+          <td>Tree + Graph</td>
+          <td>[[Links]], tags</td>
+          <td class="quality-good">Good traversal</td>
+        </tr>
+        <tr>
+          <td class="tool-name">Notion</td>
+          <td>Tree + Graph</td>
+          <td>Relations, backlinks</td>
+          <td class="quality-good">Good traversal</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div class="callout insight">
+      <p><strong>Tools with explicit connections enable traversal. Tools without connections force keyword search.</strong></p>
+      <p style="margin-bottom: 0;">Lucas already uses Notion with relations. His structure is better than most. The question is: Are conversations being captured into the graph, or staying isolated?</p>
+    </div>
+  </section>
+
+  <!-- Slide 20: Bottom Line #1 -->
+  <section class="slide">
+    <h2>The Bottom Line</h2>
+    <p>His frustration is real. Claude doesn't magically read across conversations well.</p>
+    <p>But the answer isn't "find a better AI."</p>
+    
+    <div class="bottom-line">
+      <h4>The answer is:</h4>
+      <ol>
+        <li><strong>Your conversations need structure</strong> (even just titles/tags)</li>
+        <li><strong>Related threads need to be linked</strong> (not just floating in history)</li>
+        <li><strong>Your tree gives context</strong> that makes every chunk more meaningful</li>
+        <li><strong>Graphs let you traverse</strong> when the question crosses branches</li>
+      </ol>
+      <p class="final-statement">The AI can only be as good as the structure you give it to work with.</p>
+    </div>
+  </section>
+
+  <!-- Slide 21: Agent Loop -->
+  <section class="slide">
+    <h2>Going Deeper: The Agent Loop</h2>
+    <p>When an AI agent answers your question, it's not one grab. It's a loop—and quality depends on what tools it has.</p>
+    
+    <div class="flow-diagram">
+      <div class="flow-step">Is the answer already in my context?</div>
+      <div class="flow-arrow">↓ no / uncertain</div>
+      <div class="flow-step highlight">
+        What tools do I have? (ranked by connectedness)
+        <ol style="margin: 0.75rem 0 0 1.5rem; font-size: 0.85rem;">
+          <li>Graph traversal (best)</li>
+          <li>Tree-aware search</li>
+          <li>Embedding search</li>
+          <li>Keyword search (worst)</li>
+        </ol>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">Try most connected tool → Got results?</div>
+      <div class="flow-branch">
+        <div>
+          <div class="flow-arrow">↓ yes</div>
+          <div class="flow-step">Enough to answer well?</div>
+        </div>
+        <div>
+          <div class="flow-arrow">↓ no</div>
+          <div class="flow-step">Fall back to next tool</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 22: Better Tools -->
   <section class="slide">
     <h2>Better Tools = Better Judgment</h2>
     <p>Your ability to know "do I have enough?" depends on how good your tools are.</p>
+    
     <div class="comparison">
       <div class="comparison-item">
         <h4>With graph traversal</h4>
-        <p>"I found the client, followed edges to their issues, found similar past issues, have the resolution. <strong>Yes, I have enough.</strong>"</p>
+        <p>"I found the client, followed edges to their issues, found similar past issues, have the resolution. <strong style="color: var(--success);">Yes, I have enough.</strong>"</p>
       </div>
       <div class="comparison-item">
         <h4>With keyword search</h4>
-        <p>"I found 12 chunks with the word 'timeout.' Maybe one of these is relevant? <strong>Hard to know.</strong>"</p>
+        <p>"I found 12 chunks with the word 'timeout.' Maybe one of these is relevant? <strong style="color: var(--error);">Hard to know.</strong>"</p>
       </div>
     </div>
-    <div class="insight">
-      <strong>This is why structure matters.</strong> Without it, the agent only has the bottom-tier tools. Every retrieval is a keyword lottery.
+    
+    <div class="callout insight">
+      <p><strong>This is why structure matters.</strong> Without it, the agent only has the bottom-tier tools. Every retrieval is a keyword lottery.</p>
     </div>
   </section>
 
-  <!-- Slide 15: Two Modes -->
+  <!-- Slide 23: Two Modes -->
   <section class="slide">
-    <h2>When Does This Happen? Two Modes</h2>
+    <h2>When Does This Happen?</h2>
+    
     <div class="comparison">
       <div class="comparison-item">
         <h4>Query Time (Synchronous)</h4>
         <p>User asks → Agent runs the loop → Retrieves → Answers</p>
-        <p><strong>Pro:</strong> Always fresh, responds to exact question</p>
-        <p><strong>Con:</strong> Slow, expensive, does the work every time</p>
+        <p><strong style="color: var(--success);">Pro:</strong> Always fresh, responds to exact question</p>
+        <p><strong style="color: var(--error);">Con:</strong> Slow, expensive, does the work every time</p>
+        <p class="muted" style="font-size: 0.9rem; margin-bottom: 0;">This is what most AI chat does today.</p>
       </div>
       <div class="comparison-item">
         <h4>Post-Processing Time (Async)</h4>
         <p>After events happen, system updates <strong>layers</strong> of enriched context</p>
-        <p><strong>Pro:</strong> Fast retrieval, pre-built connections</p>
-        <p><strong>Con:</strong> Requires intentional structure upfront</p>
+        <p><strong style="color: var(--success);">Pro:</strong> Fast retrieval, pre-built connections</p>
+        <p><strong style="color: var(--error);">Con:</strong> Requires intentional structure upfront</p>
+        <p class="muted" style="font-size: 0.9rem; margin-bottom: 0;">This is where the leverage is.</p>
       </div>
     </div>
   </section>
 
-  <!-- Slide 16: Layers -->
+  <!-- Slide 24: Layers -->
   <section class="slide">
     <h2>The Layers</h2>
-    <pre>┌─────────────────────────────────────────┐
-│ QUERY                                   │
-│ "What do we know about Acme's issues?"  │
-└─────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────┐
-│ CONNECTION LAYER                        │
-│ Acme → issues: [timeout-bug, login]     │
-│ timeout-bug → similar: [techstart-fix]  │
-└─────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────┐
-│ SUMMARY LAYER                           │
-│ timeout-bug: "API timeouts on large     │
-│ batches, workaround available,          │
-│ similar to resolved TechStart issue"    │
-└─────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────┐
-│ CONTEXT LAYER                           │
-│ tree: Clients/Acme/Issues               │
-│ business: Q1 pilot, expansion decision  │
-│ timeline: 2 weeks to decision           │
-└─────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────┐
-│ RAW CHUNKS                              │
-│ (only if layers don't have enough)      │
-└─────────────────────────────────────────┘</pre>
+    <p class="muted">Query time hits pre-built context, not raw chunks</p>
+    
+    <div class="flow-diagram">
+      <div class="flow-step" style="text-align: center; font-weight: 500;">
+        "What do we know about Acme's technical issues?"
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step highlight">
+        <strong>Connection Layer</strong><br>
+        <span style="color: var(--fg-muted); font-size: 0.9rem;">
+          Acme → issues: [timeout-bug, login-failure]<br>
+          timeout-bug → similar: [techstart-redis-issue]
+        </span>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step highlight">
+        <strong>Summary Layer</strong><br>
+        <span style="color: var(--fg-muted); font-size: 0.9rem;">
+          timeout-bug: "API timeouts on large batches, workaround available, similar to resolved TechStart issue"
+        </span>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step highlight">
+        <strong>Context Layer</strong><br>
+        <span style="color: var(--fg-muted); font-size: 0.9rem;">
+          tree: Clients/Acme/Issues<br>
+          business: Q1 pilot, expansion decision pending
+        </span>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step" style="opacity: 0.5;">
+        <strong>Raw Chunks</strong> (only if layers don't have enough)
+      </div>
+    </div>
   </section>
 
-  <!-- Slide 17: Intentionality Concrete -->
+  <!-- Slide 25: Why This Matters -->
   <section class="slide">
-    <h2>Layers Are Intentionality Made Concrete</h2>
+    <h2>Layers = Intentionality Made Concrete</h2>
     <p>You decide:</p>
     <ul>
       <li>What gets summarized?</li>
@@ -641,6 +1494,7 @@ but $500 might price out individual buyers."</pre>
       <li>What context should persist?</li>
     </ul>
     <p>Then the system maintains those layers. And queries hit rich, pre-processed knowledge—not a pile of raw chunks.</p>
+    
     <div class="comparison">
       <div class="comparison-item">
         <h4>Without intentional structure</h4>
@@ -661,13 +1515,16 @@ but $500 might price out individual buyers."</pre>
     </div>
   </section>
 
-  <!-- Slide 18: Bottom Line -->
+  <!-- Slide 26: Final Bottom Line -->
   <section class="slide">
-    <h2>The Bottom Line</h2>
-    <p>The frustration is real. Claude doesn't magically read across conversations well.</p>
-    <p>But the answer isn't "find a better AI."</p>
+    <h2>The Complete Picture</h2>
+    <p>Most people think about AI retrieval as:</p>
+    <p class="quote">"I have stuff. AI searches stuff. AI answers."</p>
+    <p>The reality for good retrieval:</p>
+    <p class="quote" style="border-color: var(--success);">"I have stuff. System enriches stuff into layers. Layers stay updated. AI queries layers. AI answers well."</p>
+    
     <div class="bottom-line">
-      <p><strong>The answer is:</strong></p>
+      <h4>The answer is:</h4>
       <ol>
         <li><strong>Your conversations need structure</strong> (even just titles/tags)</li>
         <li><strong>Related threads need to be linked</strong> (not just floating in history)</li>
@@ -675,15 +1532,13 @@ but $500 might price out individual buyers."</pre>
         <li><strong>Graphs let you traverse</strong> when the question crosses branches</li>
         <li><strong>Layers can be built</strong> that pre-process this context so retrieval is fast and good</li>
       </ol>
-      <p style="margin-top: 1.5rem; text-align: center; font-size: 1.2rem;">
-        <strong>The AI can only be as good as the structure you give it to work with.</strong>
-      </p>
+      <p class="final-statement">The AI can only be as good as the structure you give it to work with—and the layers you build on top of that structure.</p>
     </div>
   </section>
 
   <nav class="nav">
-    <button onclick="scrollPrev()" title="Previous">↑</button>
-    <button onclick="scrollNext()" title="Next">↓</button>
+    <button onclick="scrollPrev()" title="Previous (↑ or k)">↑</button>
+    <button onclick="scrollNext()" title="Next (↓ or j)">↓</button>
   </nav>
 
   <script>
@@ -712,7 +1567,6 @@ but $500 might price out individual buyers."</pre>
       scrollToSlide(currentSlide - 1);
     }
 
-    // Update current slide based on scroll position
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -725,7 +1579,6 @@ but $500 might price out individual buyers."</pre>
 
     window.addEventListener('scroll', updateProgress);
     
-    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'j') {
         e.preventDefault();
