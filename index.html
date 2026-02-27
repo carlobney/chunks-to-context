@@ -4,1541 +4,1059 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>From Chunks to Context</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: '#FDF6F0',
+            navy: '#173642',
+            'navy-light': '#1e4a5c',
+            teal: '#2EBCB3',
+            'teal-light': '#a8e6e3',
+            'teal-dark': '#1a8a83',
+          },
+          fontFamily: {
+            sans: ['Figtree', 'system-ui', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
   <style>
-    :root {
-      --bg: #000;
-      --fg: #fff;
-      --fg-muted: #888;
-      --fg-dim: #555;
-      --accent: #f97316;
-      --accent-dim: rgba(249, 115, 22, 0.15);
-      --surface: #0a0a0a;
-      --surface-2: #141414;
-      --surface-3: #1a1a1a;
-      --border: #262626;
-      --border-light: #333;
-      --success: #22c55e;
-      --error: #ef4444;
-    }
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    html {
-      scroll-behavior: smooth;
-    }
-    
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      line-height: 1.65;
-      font-size: 17px;
-      -webkit-font-smoothing: antialiased;
-    }
+    html { scroll-behavior: smooth; }
     
     .slide {
       min-height: 100vh;
-      padding: 5rem 2rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      max-width: 880px;
-      margin: 0 auto;
+      scroll-snap-align: start;
     }
     
-    .slide.title-slide {
-      text-align: center;
-      justify-content: center;
+    .chat-bubble-user {
+      border-radius: 20px 20px 4px 20px;
     }
     
-    h1 {
-      font-size: 3.5rem;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
+    .chat-bubble-ai {
+      border-radius: 20px 20px 20px 4px;
     }
     
-    h2 {
-      font-size: 2rem;
-      font-weight: 600;
-      margin-bottom: 2rem;
-      letter-spacing: -0.02em;
-    }
-    
-    h3 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-top: 2.5rem;
-      margin-bottom: 1rem;
-      color: var(--fg);
-    }
-    
-    .subtitle {
-      color: var(--fg-muted);
-      font-size: 1.3rem;
-      margin-top: 1rem;
-    }
-    
-    .tagline {
-      color: var(--fg-dim);
-      font-size: 1rem;
-      margin-top: 3rem;
-    }
-    
-    p {
-      margin-bottom: 1.25rem;
-      color: var(--fg);
-    }
-    
-    .muted {
-      color: var(--fg-muted);
-    }
-    
-    strong {
-      color: var(--accent);
-      font-weight: 600;
-    }
-    
-    code {
-      font-family: 'JetBrains Mono', monospace;
-      background: var(--surface-2);
-      padding: 0.15rem 0.4rem;
-      border-radius: 4px;
-      font-size: 0.9em;
-      color: var(--fg);
-    }
-    
-    /* Quote styles */
-    .quote {
-      font-size: 1.4rem;
-      font-style: italic;
-      color: var(--fg-muted);
-      border-left: 3px solid var(--accent);
-      padding-left: 1.5rem;
-      margin: 2rem 0;
-    }
-    
-    .big-quote {
-      font-size: 1.5rem;
-      font-weight: 500;
-      text-align: center;
-      padding: 2.5rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin: 2.5rem 0;
-    }
-    
-    .big-quote em {
-      color: var(--accent);
-      font-style: normal;
-    }
-    
-    /* Lists */
-    ul, ol {
-      margin: 1rem 0 1.5rem 1.25rem;
-    }
-    
-    li {
-      margin-bottom: 0.6rem;
-      color: var(--fg);
-    }
-    
-    li .check {
-      color: var(--success);
-      margin-left: 0.5rem;
-    }
-    
-    li .x {
-      color: var(--error);
-      margin-left: 0.5rem;
-    }
-    
-    /* Problem/Insight boxes */
-    .callout {
-      padding: 1.5rem;
-      border-radius: 10px;
-      margin: 1.5rem 0;
-      border: 1px solid var(--border);
-    }
-    
-    .callout.problem {
-      background: var(--surface);
-      border-left: 3px solid var(--error);
-    }
-    
-    .callout.insight {
-      background: var(--surface);
-      border-left: 3px solid var(--accent);
-    }
-    
-    .callout p:last-child {
-      margin-bottom: 0;
-    }
-    
-    /* Chat UI mockup */
-    .chat-ui {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 2rem 0;
-    }
-    
-    .chat-header {
-      background: var(--surface-2);
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.85rem;
-      color: var(--fg-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .chat-header .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-    }
-    
-    .chat-messages {
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-    
-    .chat-msg {
-      padding: 0.75rem 1rem;
-      border-radius: 12px;
-      max-width: 85%;
-      font-size: 0.95rem;
-      line-height: 1.5;
-    }
-    
-    .chat-msg.user {
-      background: var(--accent);
-      color: #000;
-      align-self: flex-end;
-      border-bottom-right-radius: 4px;
-    }
-    
-    .chat-msg.ai {
-      background: var(--surface-3);
-      color: var(--fg);
-      align-self: flex-start;
-      border-bottom-left-radius: 4px;
-    }
-    
-    /* File tree UI */
-    .file-tree {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 2rem 0;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-    }
-    
-    .file-tree-header {
-      background: var(--surface-2);
-      padding: 0.6rem 1rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--fg-muted);
-    }
-    
-    .file-tree-header .dots {
-      display: flex;
-      gap: 6px;
-    }
-    
-    .file-tree-header .dots span {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--border-light);
-    }
-    
-    .file-tree-content {
-      padding: 1rem;
-    }
-    
-    .file-item {
-      padding: 0.3rem 0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--fg);
-    }
-    
-    .file-item.indent-1 { padding-left: 1.5rem; }
-    .file-item.indent-2 { padding-left: 3rem; }
-    .file-item.indent-3 { padding-left: 4.5rem; }
-    
-    .file-item .icon {
-      font-size: 1rem;
-    }
-    
-    .file-item.folder .icon { color: var(--accent); }
-    .file-item.file .icon { color: var(--fg-muted); }
-    
-    /* Database/Table UI */
-    .db-ui {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 2rem 0;
-    }
-    
-    .db-header {
-      background: var(--surface-2);
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .db-header .icon {
-      color: var(--accent);
-    }
-    
-    .db-table {
-      width: 100%;
-      font-size: 0.9rem;
-    }
-    
-    .db-table th {
-      text-align: left;
-      padding: 0.6rem 1rem;
-      color: var(--fg-muted);
-      font-weight: 500;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .db-table td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .db-table tr:last-child td {
-      border-bottom: none;
-    }
-    
-    .db-tag {
-      display: inline-block;
-      padding: 0.2rem 0.6rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      background: var(--accent-dim);
-      color: var(--accent);
-    }
-    
-    .db-relation {
-      color: var(--accent);
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-    
-    /* Graph visualization */
-    .graph-ui {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem;
-      margin: 2rem 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 280px;
-    }
-    
-    .graph-nodes {
-      position: relative;
-      width: 100%;
-      max-width: 500px;
-      height: 220px;
-    }
-    
-    .graph-node {
-      position: absolute;
-      background: var(--surface-3);
-      border: 2px solid var(--border-light);
-      border-radius: 8px;
-      padding: 0.5rem 1rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-    
-    .graph-node.highlight {
-      border-color: var(--accent);
-      background: var(--accent-dim);
-    }
-    
-    .graph-edge {
-      position: absolute;
-      background: var(--border-light);
-      transform-origin: left center;
-    }
-    
-    .graph-edge.highlight {
-      background: var(--accent);
-    }
-    
-    /* Slack-style UI */
-    .slack-ui {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 2rem 0;
-      display: flex;
-    }
-    
-    .slack-sidebar {
-      width: 180px;
-      background: var(--surface-2);
-      border-right: 1px solid var(--border);
-      padding: 1rem 0;
-    }
-    
-    .slack-channel {
-      padding: 0.4rem 1rem;
-      font-size: 0.9rem;
-      color: var(--fg-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    
-    .slack-channel.active {
-      background: var(--accent-dim);
-      color: var(--fg);
-    }
-    
-    .slack-channel .hash {
-      color: var(--fg-dim);
-    }
-    
-    .slack-main {
-      flex: 1;
-      padding: 1rem;
-    }
-    
-    .slack-thread {
-      border-left: 2px solid var(--border);
-      padding-left: 1rem;
-      margin: 0.5rem 0;
-    }
-    
-    .slack-msg {
-      font-size: 0.9rem;
-      color: var(--fg);
-      margin-bottom: 0.5rem;
-    }
-    
-    .slack-msg .user {
-      font-weight: 600;
-      color: var(--fg);
-      margin-right: 0.5rem;
-    }
-    
-    .slack-msg .time {
-      font-size: 0.75rem;
-      color: var(--fg-dim);
-    }
-    
-    /* Excel-style UI */
-    .excel-ui {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 2rem 0;
-    }
-    
-    .excel-tabs {
-      display: flex;
-      background: var(--surface-2);
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .excel-tab {
-      padding: 0.5rem 1rem;
-      font-size: 0.85rem;
-      color: var(--fg-muted);
-      border-right: 1px solid var(--border);
-    }
-    
-    .excel-tab.active {
-      background: var(--surface);
-      color: var(--fg);
-    }
-    
-    .excel-grid {
-      display: grid;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-    }
-    
-    .excel-row {
-      display: contents;
-    }
-    
-    .excel-cell {
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-    }
-    
-    .excel-cell.header {
-      background: var(--surface-2);
-      color: var(--fg-muted);
-      font-weight: 500;
-    }
-    
-    .excel-cell.formula {
-      color: var(--accent);
-    }
-    
-    /* Comparison grid */
-    .comparison {
-      display: grid;
-      gap: 1rem;
-      margin: 2rem 0;
-    }
-    
-    @media (min-width: 640px) {
-      .comparison {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-    
-    .comparison-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 1.5rem;
-      border-radius: 10px;
-    }
-    
-    .comparison-item h4 {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--fg-muted);
-      margin-bottom: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .comparison-item p {
-      font-size: 0.95rem;
-      margin-bottom: 0;
-    }
-    
-    .comparison-item ul {
-      margin: 0;
-      padding-left: 1rem;
-    }
-    
-    /* Summary table */
-    .summary-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 2rem 0;
-      font-size: 0.95rem;
-    }
-    
-    .summary-table th {
-      text-align: left;
-      padding: 0.75rem 1rem;
-      color: var(--fg-muted);
-      font-weight: 500;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .summary-table td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .summary-table tr:last-child td {
-      border-bottom: none;
-    }
-    
-    /* Tool comparison table */
-    .tool-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 2rem 0;
-      font-size: 0.9rem;
-    }
-    
-    .tool-table th {
-      text-align: left;
-      padding: 0.75rem;
-      color: var(--fg-muted);
-      font-weight: 500;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 2px solid var(--border);
-    }
-    
-    .tool-table td {
-      padding: 0.75rem;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .tool-table .tool-name {
-      font-weight: 600;
-    }
-    
-    .tool-table .quality-bad {
-      color: var(--error);
-    }
-    
-    .tool-table .quality-ok {
-      color: var(--fg-muted);
-    }
-    
-    .tool-table .quality-good {
-      color: var(--success);
-    }
-    
-    /* Bottom line box */
-    .bottom-line {
-      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      padding: 2rem;
-      border-radius: 12px;
-      margin: 2.5rem 0;
-    }
-    
-    .bottom-line h4 {
-      font-size: 1rem;
-      color: var(--accent);
-      margin-bottom: 1rem;
-    }
-    
-    .bottom-line ol {
-      margin: 0;
-      padding-left: 1.25rem;
-    }
-    
-    .bottom-line li {
-      margin-bottom: 0.5rem;
-    }
-    
-    .final-statement {
-      text-align: center;
-      font-size: 1.2rem;
-      font-weight: 500;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-    }
-    
-    /* Flow diagram */
-    .flow-diagram {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2rem;
-      margin: 2rem 0;
-    }
-    
-    .flow-step {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 0.5rem;
-      font-size: 0.9rem;
-    }
-    
-    .flow-step.highlight {
-      border-color: var(--accent);
-      background: var(--accent-dim);
-    }
-    
-    .flow-arrow {
-      text-align: center;
-      color: var(--fg-dim);
-      padding: 0.25rem 0;
-      font-size: 1.25rem;
-    }
-    
-    .flow-branch {
-      display: flex;
-      gap: 1rem;
-      margin: 0.5rem 0;
-    }
-    
-    .flow-branch > div {
-      flex: 1;
-    }
-    
-    /* Pre/code blocks */
-    pre {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 1.25rem;
-      border-radius: 10px;
-      overflow-x: auto;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      line-height: 1.6;
-      margin: 1.5rem 0;
-    }
-    
-    /* Navigation */
-    .nav {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      display: flex;
-      gap: 0.5rem;
-      z-index: 100;
-    }
-    
-    .nav button {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--fg);
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1.1rem;
-      transition: all 0.15s ease;
-    }
-    
-    .nav button:hover {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #000;
-    }
-    
-    .progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 2px;
-      background: var(--accent);
-      z-index: 100;
-      transition: width 0.1s;
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-      .slide {
-        padding: 3rem 1.25rem;
-      }
-      
-      h1 {
-        font-size: 2.25rem;
-      }
-      
-      h2 {
-        font-size: 1.5rem;
-      }
-      
-      .slack-ui {
-        flex-direction: column;
-      }
-      
-      .slack-sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        overflow-x: auto;
-        padding: 0.5rem;
-      }
-      
-      .slack-channel {
-        white-space: nowrap;
-      }
-      
-      .graph-ui {
-        padding: 1rem;
-        min-height: 200px;
-      }
-      
-      .graph-nodes {
-        transform: scale(0.75);
-        transform-origin: center;
-      }
+    .progress-bar {
+      transition: width 0.1s ease;
     }
   </style>
 </head>
-<body>
-  <div class="progress" id="progress"></div>
+<body class="bg-cream text-navy font-sans antialiased">
+  <!-- Progress bar -->
+  <div class="fixed top-0 left-0 h-1 bg-teal z-50 progress-bar" id="progress"></div>
 
   <!-- Slide 1: Title -->
-  <section class="slide title-slide">
-    <h1>From Chunks<br>to Context</h1>
-    <p class="subtitle">The AI Retrieval Problem</p>
-    <p class="tagline">A teaching progression for operators thinking about AI and knowledge management</p>
+  <section class="slide flex flex-col justify-center items-center px-6 py-20 text-center">
+    <div class="max-w-4xl">
+      <h1 class="text-5xl md:text-7xl font-bold tracking-tight mb-4">
+        From Chunks<br>to Context
+      </h1>
+      <p class="text-xl md:text-2xl text-navy/60 font-light">The AI Retrieval Problem</p>
+      <p class="mt-16 text-navy/40 font-mono text-sm tracking-wide uppercase">
+        A teaching progression for operators thinking about AI and knowledge management
+      </p>
+    </div>
   </section>
 
   <!-- Slide 2: The Frustration -->
-  <section class="slide">
-    <h2>Start Where People Are</h2>
-    <p class="quote">"Claude seems to do a worse job reading across conversations."</p>
-    <p>Most people's first experience with AI is a chat interface. Messages streaming by. You ask, it answers.</p>
-    <p>Each message in a conversation is a <strong>chunk</strong>. Easy to visualize:</p>
-    
-    <div class="chat-ui">
-      <div class="chat-header">
-        <span class="dot"></span>
-        Claude
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Start Where People Are</h2>
+      
+      <blockquote class="border-l-4 border-teal pl-6 my-8 text-xl md:text-2xl text-navy/70 italic">
+        "Claude seems to do a worse job reading across conversations."
+      </blockquote>
+      
+      <p class="text-lg mb-6">Most people's first experience with AI is a chat interface. Messages streaming by. You ask, it answers.</p>
+      <p class="text-lg mb-8">Each message in a conversation is a <span class="font-semibold text-teal">chunk</span>. Easy to visualize:</p>
+      
+      <!-- Chat UI -->
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden">
+        <div class="bg-navy/5 px-4 py-3 flex items-center gap-2 border-b border-navy/10">
+          <div class="w-2.5 h-2.5 rounded-full bg-teal"></div>
+          <span class="font-mono text-sm text-navy/60">Claude</span>
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="flex justify-end">
+            <div class="chat-bubble-user bg-teal text-white px-4 py-2.5 max-w-[80%]">
+              How should we price the course?
+            </div>
+          </div>
+          <div class="flex justify-start">
+            <div class="chat-bubble-ai bg-navy/5 px-4 py-2.5 max-w-[80%]">
+              Based on market rates... $299-500 range seems reasonable for the value you're delivering...
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <div class="chat-bubble-user bg-teal text-white px-4 py-2.5 max-w-[80%]">
+              What about enterprise?
+            </div>
+          </div>
+          <div class="flex justify-start">
+            <div class="chat-bubble-ai bg-navy/5 px-4 py-2.5 max-w-[80%]">
+              For enterprise bundles, typically 10-seat minimums at $35K...
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="chat-messages">
-        <div class="chat-msg user">How should we price the course?</div>
-        <div class="chat-msg ai">Based on market rates... $299-500 range seems reasonable for the value you're delivering...</div>
-        <div class="chat-msg user">What about enterprise?</div>
-        <div class="chat-msg ai">For enterprise bundles, typically 10-seat minimums at $35K...</div>
-      </div>
+      
+      <p class="mt-8 text-navy/60">Now imagine hundreds of these conversations. You want to find something.</p>
     </div>
-    
-    <p class="muted">Now imagine hundreds of these conversations. You want to find something.</p>
   </section>
 
   <!-- Slide 3: Level 0 -->
-  <section class="slide">
-    <h2>Level 0: Keyword Search</h2>
-    <p>You search: <code>pricing</code></p>
-    <p><strong>What you get:</strong> Every chunk that contains the word "pricing"</p>
-    <ul>
-      <li>That conversation about course pricing <span class="check">✓</span></li>
-      <li>That conversation about your SaaS pricing strategy <span class="check">✓</span></li>
-      <li>That conversation about grocery prices for your wife's bakery <span class="x">✗</span></li>
-      <li>That random mention of "pricing pressure" in an unrelated discussion <span class="x">✗</span></li>
-    </ul>
-    <div class="callout problem">
-      <p><strong>The problem:</strong> Keywords match text, not meaning. You get noise. You miss relevant chunks that used different words ("cost," "rate," "what should we charge").</p>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Level 0: Keyword Search</h2>
+      
+      <p class="text-lg mb-4">You search: <code class="font-mono bg-navy/5 px-2 py-1 rounded text-teal-dark">"pricing"</code></p>
+      
+      <p class="text-lg font-semibold text-teal mb-4">What you get:</p>
+      <p class="text-lg mb-4">Every chunk that contains the word "pricing"</p>
+      
+      <ul class="space-y-2 text-lg mb-8">
+        <li class="flex items-start gap-3">
+          <span class="text-teal mt-1">✓</span>
+          <span>That conversation about course pricing</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-teal mt-1">✓</span>
+          <span>That conversation about your SaaS pricing strategy</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-red-500 mt-1">✗</span>
+          <span class="text-navy/60">That conversation about grocery prices for your wife's bakery</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-red-500 mt-1">✗</span>
+          <span class="text-navy/60">That random mention of "pricing pressure" in an unrelated discussion</span>
+        </li>
+      </ul>
+      
+      <div class="bg-red-50 border-l-4 border-red-400 p-5 rounded-r-lg">
+        <p class="font-semibold text-red-800 mb-1">The problem:</p>
+        <p class="text-red-700">Keywords match text, not meaning. You get noise. You miss relevant chunks that used different words ("cost," "rate," "what should we charge").</p>
+      </div>
     </div>
   </section>
 
   <!-- Slide 4: Level 1 - Embeddings -->
-  <section class="slide">
-    <h2>Level 1: Embedding Space</h2>
-    <p>Instead of keywords, we place each chunk in <strong>meaning space</strong>.</p>
-    
-    <div class="graph-ui">
-      <svg viewBox="0 0 400 250" style="width: 100%; max-width: 400px;">
-        <!-- Axes -->
-        <line x1="200" y1="20" x2="200" y2="230" stroke="#333" stroke-width="2"/>
-        <line x1="20" y1="125" x2="380" y2="125" stroke="#333" stroke-width="2"/>
-        
-        <!-- Labels -->
-        <text x="200" y="15" fill="#666" font-size="12" text-anchor="middle">BUSINESS</text>
-        <text x="200" y="245" fill="#666" font-size="12" text-anchor="middle">PERSONAL</text>
-        <text x="15" y="125" fill="#666" font-size="12" text-anchor="middle" transform="rotate(-90, 15, 125)">FINANCIAL</text>
-        <text x="385" y="125" fill="#666" font-size="12" text-anchor="middle" transform="rotate(90, 385, 125)">VALUES</text>
-        
-        <!-- Dots - Business/Financial quadrant -->
-        <circle cx="120" cy="60" r="8" fill="#f97316"/>
-        <text x="120" y="45" fill="#fff" font-size="11" text-anchor="middle">pricing</text>
-        <circle cx="150" cy="85" r="6" fill="#f97316" opacity="0.7"/>
-        <text x="150" y="100" fill="#888" font-size="10" text-anchor="middle">course</text>
-        
-        <!-- Dots - Business/Values quadrant -->
-        <circle cx="280" cy="55" r="6" fill="#666"/>
-        <text x="280" y="45" fill="#888" font-size="10" text-anchor="middle">strategy</text>
-        <circle cx="310" cy="80" r="6" fill="#666"/>
-        <text x="310" y="95" fill="#888" font-size="10" text-anchor="middle">clients</text>
-        
-        <!-- Dots - Personal/Financial quadrant -->
-        <circle cx="100" cy="180" r="6" fill="#666"/>
-        <text x="100" y="195" fill="#888" font-size="10" text-anchor="middle">expenses</text>
-        <circle cx="160" cy="190" r="6" fill="#666"/>
-        <text x="160" y="205" fill="#888" font-size="10" text-anchor="middle">revenue</text>
-        
-        <!-- Dots - Personal/Values quadrant -->
-        <circle cx="290" cy="175" r="6" fill="#666"/>
-        <text x="290" y="190" fill="#888" font-size="10" text-anchor="middle">goals</text>
-        <circle cx="330" cy="195" r="6" fill="#666"/>
-        <text x="330" y="210" fill="#888" font-size="10" text-anchor="middle">family</text>
-      </svg>
-    </div>
-    
-    <p>Search: <code>how much should I charge for workshops</code></p>
-    <p>→ Finds the pricing conversation even though you never said "charge" or "workshops" in that thread</p>
-    
-    <div class="callout insight">
-      <p><strong>This is what embeddings do.</strong> They place chunks in n-dimensional space based on meaning, so similar concepts cluster together.</p>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Level 1: Embedding Space</h2>
+      
+      <p class="text-lg mb-8">Instead of keywords, we place each chunk in <span class="font-semibold text-teal">meaning space</span>.</p>
+      
+      <!-- Quadrant visualization -->
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 p-8 mb-8">
+        <svg viewBox="0 0 400 280" class="w-full max-w-md mx-auto">
+          <!-- Axes -->
+          <line x1="200" y1="30" x2="200" y2="250" stroke="#173642" stroke-width="2" opacity="0.2"/>
+          <line x1="30" y1="140" x2="370" y2="140" stroke="#173642" stroke-width="2" opacity="0.2"/>
+          
+          <!-- Labels -->
+          <text x="200" y="20" fill="#173642" font-size="12" text-anchor="middle" font-weight="600">BUSINESS</text>
+          <text x="200" y="270" fill="#173642" font-size="12" text-anchor="middle" font-weight="600">PERSONAL</text>
+          <text x="15" y="145" fill="#173642" font-size="12" text-anchor="middle" font-weight="600" transform="rotate(-90, 15, 145)">FINANCIAL</text>
+          <text x="385" y="145" fill="#173642" font-size="12" text-anchor="middle" font-weight="600" transform="rotate(90, 385, 145)">VALUES</text>
+          
+          <!-- Highlighted dot - pricing -->
+          <circle cx="120" cy="70" r="12" fill="#2EBCB3"/>
+          <text x="120" y="55" fill="#173642" font-size="11" text-anchor="middle" font-weight="600">pricing</text>
+          
+          <!-- Other dots -->
+          <circle cx="160" cy="95" r="8" fill="#2EBCB3" opacity="0.5"/>
+          <text x="160" y="115" fill="#173642" font-size="10" text-anchor="middle" opacity="0.6">course</text>
+          
+          <circle cx="280" cy="65" r="8" fill="#173642" opacity="0.3"/>
+          <text x="280" y="55" fill="#173642" font-size="10" text-anchor="middle" opacity="0.5">strategy</text>
+          
+          <circle cx="310" cy="90" r="8" fill="#173642" opacity="0.3"/>
+          <text x="310" y="110" fill="#173642" font-size="10" text-anchor="middle" opacity="0.5">clients</text>
+          
+          <circle cx="100" cy="200" r="8" fill="#173642" opacity="0.3"/>
+          <text x="100" y="220" fill="#173642" font-size="10" text-anchor="middle" opacity="0.5">expenses</text>
+          
+          <circle cx="290" cy="195" r="8" fill="#173642" opacity="0.3"/>
+          <text x="290" y="215" fill="#173642" font-size="10" text-anchor="middle" opacity="0.5">goals</text>
+          
+          <circle cx="330" cy="210" r="8" fill="#173642" opacity="0.3"/>
+          <text x="330" y="230" fill="#173642" font-size="10" text-anchor="middle" opacity="0.5">family</text>
+        </svg>
+      </div>
+      
+      <p class="text-lg mb-2">Search: <code class="font-mono bg-navy/5 px-2 py-1 rounded text-teal-dark">"how much should I charge for workshops"</code></p>
+      <p class="text-lg mb-8 text-navy/70">→ Finds the pricing conversation even though you never said "charge" or "workshops" in that thread</p>
+      
+      <div class="bg-teal/10 border-l-4 border-teal p-5 rounded-r-lg">
+        <p class="font-semibold text-teal-dark mb-1">This is what embeddings do.</p>
+        <p class="text-navy/70">They place chunks in n-dimensional space based on meaning, so similar concepts cluster together.</p>
+      </div>
     </div>
   </section>
 
-  <!-- Slide 5: Level 2 - Context Window -->
-  <section class="slide">
-    <h2>Level 2: The Context Window Constraint</h2>
-    <p>Here's the practical constraint: When you ask AI a question, you have limited space to give it context. Maybe 100K tokens. Maybe 200K. Not infinite.</p>
-    <p>So the retrieval system has to:</p>
-    <ol>
-      <li>Search the embedding space</li>
-      <li>Find relevant chunks</li>
-      <li>Pick which ones to include</li>
-      <li>Stuff them into the context window</li>
-    </ol>
-    <div class="big-quote">
-      The question becomes: When the system retrieves a chunk, <em>what does it know</em> about that chunk?
+  <!-- Slide 5: Context Window -->
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Level 2: The Context Window Constraint</h2>
+      
+      <p class="text-lg mb-6">Here's the practical constraint: When you ask AI a question, you have limited space to give it context. Maybe 100K tokens. Maybe 200K. Not infinite.</p>
+      
+      <p class="text-lg mb-4">So the retrieval system has to:</p>
+      
+      <ol class="space-y-3 text-lg mb-10">
+        <li class="flex items-start gap-3">
+          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">1</span>
+          <span>Search the embedding space</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">2</span>
+          <span>Find relevant chunks</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">3</span>
+          <span>Pick which ones to include</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">4</span>
+          <span>Stuff them into the context window</span>
+        </li>
+      </ol>
+      
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 p-8 text-center">
+        <p class="text-xl md:text-2xl font-medium">
+          The question becomes: When the system retrieves a chunk, <span class="text-teal font-semibold">what does it know</span> about that chunk?
+        </p>
+      </div>
     </div>
   </section>
 
   <!-- Slide 6: Chunk Alone -->
-  <section class="slide">
-    <h2>Level 3: Chunk Alone</h2>
-    <p>The system retrieves:</p>
-    
-    <div class="chat-ui">
-      <div class="chat-header">Retrieved chunk</div>
-      <div class="chat-messages">
-        <div class="chat-msg ai">"I think $299 is too low for the value we deliver, but $500 might price out individual buyers."</div>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Level 3: Chunk Alone</h2>
+      
+      <p class="text-lg mb-6">The system retrieves:</p>
+      
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden mb-8">
+        <div class="bg-navy/5 px-4 py-3 border-b border-navy/10">
+          <span class="font-mono text-sm text-navy/60">Retrieved chunk</span>
+        </div>
+        <div class="p-5">
+          <p class="text-lg italic text-navy/80">"I think $299 is too low for the value we deliver, but $500 might price out individual buyers."</p>
+        </div>
       </div>
+      
+      <p class="text-lg mb-3">AI summarizes:</p>
+      <blockquote class="border-l-4 border-navy/20 pl-6 mb-8 text-lg text-navy/60 italic">
+        "Discussion about pricing something between $299-500."
+      </blockquote>
+      
+      <p class="text-lg text-navy/60">That's... not wrong. But it's thin. What are we pricing? For whom? What's the context?</p>
     </div>
-    
-    <p>AI summarizes:</p>
-    <p class="quote">"Discussion about pricing something between $299-500."</p>
-    <p class="muted">That's... not wrong. But it's thin. What are we pricing? For whom? What's the context?</p>
   </section>
 
   <!-- Slide 7: Chunk + Thread -->
-  <section class="slide">
-    <h2>Level 3: Chunk in Thread</h2>
-    <p>Same chunk, BUT now the system also knows:</p>
-    <ul>
-      <li>This thread was tagged/titled "Course Pricing Strategy"</li>
-      <li>Earlier in thread: discussed competitor pricing, target audience</li>
-      <li>Later in thread: decided on $299 early bird, $349 standard</li>
-    </ul>
-    <p>AI summarizes:</p>
-    <p class="quote">"From a course pricing discussion—considering $299-500 range, weighing individual buyer accessibility against value delivery. Thread concluded with tiered pricing decision."</p>
-    <div class="callout insight">
-      <p><strong>Much better.</strong> The thread gives context that the chunk alone doesn't have.</p>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Level 3: Chunk in Thread</h2>
+      
+      <p class="text-lg mb-6">Same chunk, BUT now the system also knows:</p>
+      
+      <ul class="space-y-2 text-lg mb-8">
+        <li class="flex items-start gap-3">
+          <span class="text-teal mt-1">•</span>
+          <span>This thread was tagged/titled "Course Pricing Strategy"</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-teal mt-1">•</span>
+          <span>Earlier in thread: discussed competitor pricing, target audience</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-teal mt-1">•</span>
+          <span>Later in thread: decided on $299 early bird, $349 standard</span>
+        </li>
+      </ul>
+      
+      <p class="text-lg mb-3">AI summarizes:</p>
+      <blockquote class="border-l-4 border-teal pl-6 mb-8 text-lg text-navy/80 italic">
+        "From a course pricing discussion—considering $299-500 range, weighing individual buyer accessibility against value delivery. Thread concluded with tiered pricing decision."
+      </blockquote>
+      
+      <div class="bg-teal/10 border-l-4 border-teal p-5 rounded-r-lg">
+        <p class="font-semibold text-teal-dark">Much better.</p>
+        <p class="text-navy/70">The thread gives context that the chunk alone doesn't have.</p>
+      </div>
     </div>
   </section>
 
   <!-- Slide 8: Chunk + Tree -->
-  <section class="slide">
-    <h2>Level 3: Chunk + Tree Structure</h2>
-    <p>Now the system also knows where this conversation lives in YOUR structure:</p>
-    
-    <div class="file-tree">
-      <div class="file-tree-header">
-        <div class="dots"><span></span><span></span><span></span></div>
-        Your Knowledge Base
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Level 3: Chunk + Tree Structure</h2>
+      
+      <p class="text-lg mb-6">Now the system also knows where this conversation lives in YOUR structure:</p>
+      
+      <!-- File tree -->
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden mb-8">
+        <div class="bg-navy/5 px-4 py-3 flex items-center gap-2 border-b border-navy/10">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+          <div class="w-3 h-3 rounded-full bg-green-400"></div>
+          <span class="ml-2 font-mono text-sm text-navy/60">Your Knowledge Base</span>
+        </div>
+        <div class="p-4 font-mono text-sm space-y-1">
+          <div class="flex items-center gap-2 text-navy/60">
+            <span>📁</span> Business
+          </div>
+          <div class="flex items-center gap-2 text-navy/60 pl-6">
+            <span>📁</span> Obney
+          </div>
+          <div class="flex items-center gap-2 text-navy/60 pl-12">
+            <span>📁</span> Products
+          </div>
+          <div class="flex items-center gap-2 text-teal font-semibold pl-16">
+            <span>📁</span> AI Course
+          </div>
+          <div class="flex items-center gap-2 bg-teal/10 -mx-4 px-4 py-1 pl-20 text-teal font-semibold">
+            <span>💬</span> Pricing <span class="text-navy/40 font-normal">← you are here</span>
+          </div>
+          <div class="flex items-center gap-2 text-navy/40 pl-20">
+            <span>💬</span> Enterprise Pricing
+          </div>
+          <div class="flex items-center gap-2 text-navy/40 pl-20">
+            <span>💬</span> Scholarship Options
+          </div>
+        </div>
       </div>
-      <div class="file-tree-content">
-        <div class="file-item folder"><span class="icon">📁</span> Business</div>
-        <div class="file-item folder indent-1"><span class="icon">📁</span> Obney</div>
-        <div class="file-item folder indent-2"><span class="icon">📁</span> Products</div>
-        <div class="file-item folder indent-3" style="color: var(--accent);"><span class="icon">📁</span> AI Course</div>
-        <div class="file-item file indent-3" style="color: var(--accent);"><span class="icon">💬</span> Pricing ← you are here</div>
-        <div class="file-item file indent-3"><span class="icon">💬</span> Enterprise Pricing</div>
-        <div class="file-item file indent-3"><span class="icon">💬</span> Scholarship Options</div>
+      
+      <p class="text-lg mb-3">AI summarizes:</p>
+      <blockquote class="border-l-4 border-teal pl-6 mb-8 text-lg text-navy/80 italic">
+        "Pricing discussion for Obney's AI Engineering Course (10-week technical program). Settled on $299-500 individual range. Related threads cover enterprise bundles and scholarship access."
+      </blockquote>
+      
+      <div class="bg-teal/10 border-l-4 border-teal p-5 rounded-r-lg">
+        <p class="font-semibold text-teal-dark">The tree structure tells the AI what this chunk is about without you having to explain.</p>
       </div>
-    </div>
-    
-    <p>AI summarizes:</p>
-    <p class="quote">"Pricing discussion for Obney's AI Engineering Course (10-week technical program). Settled on $299-500 individual range. Related threads cover enterprise bundles and scholarship access."</p>
-    <div class="callout insight">
-      <p><strong>The tree structure tells the AI what this chunk is about without you having to explain.</strong></p>
     </div>
   </section>
 
   <!-- Slide 9: Chunk + Audience -->
-  <section class="slide">
-    <h2>Level 3: Chunk + Who's Asking</h2>
-    <p>Now the system knows <em>who's</em> asking:</p>
-    
-    <div class="comparison">
-      <div class="comparison-item">
-        <h4>For you (the CEO)</h4>
-        <p>"Your course pricing landed at $299 early bird / $349 standard. Enterprise at $35K/10 seats. You had concerns about underpricing—worth revisiting given recent demand signals."</p>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Level 3: Chunk + Who's Asking</h2>
+      
+      <p class="text-lg mb-8">Now the system knows <em>who's</em> asking:</p>
+      
+      <div class="grid md:grid-cols-2 gap-4 mb-4">
+        <div class="bg-white rounded-xl shadow-md border border-navy/10 p-5">
+          <p class="font-mono text-xs uppercase tracking-wide text-navy/40 mb-3">For you (the CEO)</p>
+          <p class="text-navy/80">"Your course pricing landed at $299 early bird / $349 standard. Enterprise at $35K/10 seats. You had concerns about underpricing—worth revisiting given recent demand signals."</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-md border border-navy/10 p-5">
+          <p class="font-mono text-xs uppercase tracking-wide text-navy/40 mb-3">For Alex (operations)</p>
+          <p class="text-navy/80">"Course pricing is $299/$349 individual, $35K enterprise bundle. Need to set up payment processing for both tiers."</p>
+        </div>
       </div>
-      <div class="comparison-item">
-        <h4>For Alex (operations)</h4>
-        <p>"Course pricing is $299/$349 individual, $35K enterprise bundle. Need to set up payment processing for both tiers."</p>
+      
+      <div class="bg-white rounded-xl shadow-md border border-navy/10 p-5 mb-8">
+        <p class="font-mono text-xs uppercase tracking-wide text-navy/40 mb-3">For an investor</p>
+        <p class="text-navy/80">"Course priced at $5K/seat effective rate for enterprise ($35K/10), with $299-349 individual tier for pipeline building."</p>
       </div>
+      
+      <p class="text-lg font-semibold text-teal">Same underlying information. Different summary. Based on traversal path and audience.</p>
     </div>
-    
-    <div class="comparison-item" style="margin-top: 1rem;">
-      <h4>For an investor</h4>
-      <p>"Course priced at $5K/seat effective rate for enterprise ($35K/10), with $299-349 individual tier for pipeline building."</p>
-    </div>
-    
-    <p style="margin-top: 1.5rem;"><strong>Same underlying information. Different summary. Based on traversal path and audience.</strong></p>
   </section>
 
   <!-- Slide 10: Document Problem -->
-  <section class="slide">
-    <h2>The Document Problem</h2>
-    <p>Conversations chunk naturally (each message = chunk). Documents don't.</p>
-    <p>A 41-page PDF might have:</p>
-    <ul>
-      <li>Page 1-3: Executive summary</li>
-      <li>Page 4-12: Market analysis (you don't care)</li>
-      <li>Page 13-15: <strong>The three paragraphs that answer your question</strong></li>
-      <li>Page 16-41: Appendices</li>
-    </ul>
-    
-    <div class="comparison">
-      <div class="comparison-item">
-        <h4>Embed whole document</h4>
-        <p>It lands somewhere vague in meaning space. Retrieval either grabs all 41 pages (waste of context) or nothing.</p>
-      </div>
-      <div class="comparison-item">
-        <h4>Chunk arbitrarily (every 500 words)</h4>
-        <p>You might split a key paragraph across chunks. You lose section structure. A chunk from page 37 has no context.</p>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">The Document Problem</h2>
+      
+      <p class="text-lg mb-6">Conversations chunk naturally (each message = chunk). Documents don't.</p>
+      
+      <p class="text-lg mb-4">A 41-page PDF might have:</p>
+      <ul class="space-y-2 text-lg mb-8">
+        <li class="flex items-start gap-3 text-navy/60">
+          <span class="text-navy/40">•</span>
+          <span>Page 1-3: Executive summary</span>
+        </li>
+        <li class="flex items-start gap-3 text-navy/60">
+          <span class="text-navy/40">•</span>
+          <span>Page 4-12: Market analysis (you don't care)</span>
+        </li>
+        <li class="flex items-start gap-3 font-semibold">
+          <span class="text-teal">•</span>
+          <span>Page 13-15: The three paragraphs that answer your question</span>
+        </li>
+        <li class="flex items-start gap-3 text-navy/60">
+          <span class="text-navy/40">•</span>
+          <span>Page 16-41: Appendices</span>
+        </li>
+      </ul>
+      
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl shadow-md border border-navy/10 p-5">
+          <p class="font-mono text-xs uppercase tracking-wide text-navy/40 mb-3">Embed whole document</p>
+          <p class="text-navy/70">It lands somewhere vague in meaning space. Retrieval either grabs all 41 pages (waste of context) or nothing.</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-md border border-navy/10 p-5">
+          <p class="font-mono text-xs uppercase tracking-wide text-navy/40 mb-3">Chunk arbitrarily (every 500 words)</p>
+          <p class="text-navy/70">You might split a key paragraph across chunks. You lose section structure. A chunk from page 37 has no context.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- Slide 11: Intentionality -->
-  <section class="slide">
-    <h2>The Intentionality Requirement</h2>
-    <div class="big-quote">
-      Without intentionality, you get <em>no control</em> of the chunking strategy.
-    </div>
-    <p>This is why "just dump everything in the AI" doesn't work.</p>
-    
-    <div class="comparison">
-      <div class="comparison-item">
-        <h4>If you're intentional</h4>
-        <ul>
-          <li>You know documents have sections → chunk by section</li>
-          <li>You know this paragraph matters → ensure it stays intact</li>
-          <li>You know these three files relate → link them explicitly</li>
-        </ul>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">The Intentionality Requirement</h2>
+      
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 p-8 text-center mb-10">
+        <p class="text-xl md:text-2xl font-medium">
+          Without intentionality, you get <span class="text-teal font-semibold">no control</span> of the chunking strategy.
+        </p>
       </div>
-      <div class="comparison-item">
-        <h4>If you're not intentional</h4>
-        <ul>
-          <li>Chunking is arbitrary</li>
-          <li>Retrieval is lottery</li>
-          <li>AI hallucinates connections that don't exist</li>
-        </ul>
+      
+      <p class="text-lg mb-8">This is why "just dump everything in the AI" doesn't work.</p>
+      
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-teal/10 rounded-xl p-5 border border-teal/20">
+          <p class="font-mono text-xs uppercase tracking-wide text-teal-dark mb-3">If you're intentional</p>
+          <ul class="space-y-2 text-navy/80">
+            <li>• You know documents have sections → chunk by section</li>
+            <li>• You know this paragraph matters → ensure it stays intact</li>
+            <li>• You know these three files relate → link them explicitly</li>
+          </ul>
+        </div>
+        <div class="bg-red-50 rounded-xl p-5 border border-red-100">
+          <p class="font-mono text-xs uppercase tracking-wide text-red-700 mb-3">If you're not intentional</p>
+          <ul class="space-y-2 text-navy/70">
+            <li>• Chunking is arbitrary</li>
+            <li>• Retrieval is lottery</li>
+            <li>• AI hallucinates connections that don't exist</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- Slide 12: Progression Summary -->
-  <section class="slide">
-    <h2>The Progression Summary</h2>
-    <table class="summary-table">
-      <thead>
-        <tr>
-          <th>What You Search</th>
-          <th>What AI Knows</th>
-          <th>Quality</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Keywords</td>
-          <td>Just the matching text</td>
-          <td style="color: var(--error);">Garbage</td>
-        </tr>
-        <tr>
-          <td>Embeddings</td>
-          <td>Chunk meaning</td>
-          <td style="color: var(--fg-muted);">Basic</td>
-        </tr>
-        <tr>
-          <td>+ Thread context</td>
-          <td>What conversation this came from</td>
-          <td style="color: var(--fg-muted);">Better</td>
-        </tr>
-        <tr>
-          <td>+ Tree structure</td>
-          <td>Where it lives in your system</td>
-          <td style="color: var(--success);">Much better</td>
-        </tr>
-        <tr>
-          <td>+ Who's asking</td>
-          <td>What they need to know/do</td>
-          <td style="color: var(--success);">Tailored</td>
-        </tr>
-        <tr>
-          <td>+ Graph connections</td>
-          <td>What else relates</td>
-          <td style="color: var(--accent);">Full context</td>
-        </tr>
-      </tbody>
-    </table>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">The Progression Summary</h2>
+      
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="bg-navy/5">
+              <th class="px-5 py-4 font-mono text-xs uppercase tracking-wide text-navy/60">What You Search</th>
+              <th class="px-5 py-4 font-mono text-xs uppercase tracking-wide text-navy/60">What AI Knows</th>
+              <th class="px-5 py-4 font-mono text-xs uppercase tracking-wide text-navy/60">Quality</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-navy/10">
+            <tr>
+              <td class="px-5 py-4">Keywords</td>
+              <td class="px-5 py-4 text-navy/70">Just the matching text</td>
+              <td class="px-5 py-4 text-red-500 font-medium">Garbage</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-4">Embeddings</td>
+              <td class="px-5 py-4 text-navy/70">Chunk meaning</td>
+              <td class="px-5 py-4 text-navy/50 font-medium">Basic</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-4">+ Thread context</td>
+              <td class="px-5 py-4 text-navy/70">What conversation this came from</td>
+              <td class="px-5 py-4 text-navy/70 font-medium">Better</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-4">+ Tree structure</td>
+              <td class="px-5 py-4 text-navy/70">Where it lives in your system</td>
+              <td class="px-5 py-4 text-teal font-medium">Much better</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-4">+ Who's asking</td>
+              <td class="px-5 py-4 text-navy/70">What they need to know/do</td>
+              <td class="px-5 py-4 text-teal font-medium">Tailored</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-4 font-semibold">+ Graph connections</td>
+              <td class="px-5 py-4 text-navy/70">What else relates</td>
+              <td class="px-5 py-4 text-teal font-semibold">Full context</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </section>
 
   <!-- Slide 13: Google Drive -->
-  <section class="slide">
-    <h2>Tools You Know: Google Drive</h2>
-    <p class="muted">Pure Tree, No Graph</p>
-    
-    <div class="file-tree">
-      <div class="file-tree-header">
-        <div class="dots"><span></span><span></span><span></span></div>
-        My Drive
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <p class="font-mono text-sm uppercase tracking-wide text-navy/40 mb-2">Tools You Know</p>
+      <h2 class="text-3xl md:text-4xl font-bold mb-2">Google Drive</h2>
+      <p class="text-lg text-navy/60 mb-8">Pure Tree, No Graph</p>
+      
+      <!-- File tree -->
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden mb-8">
+        <div class="bg-navy/5 px-4 py-3 flex items-center gap-2 border-b border-navy/10">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+          <div class="w-3 h-3 rounded-full bg-green-400"></div>
+          <span class="ml-2 font-mono text-sm text-navy/60">My Drive</span>
+        </div>
+        <div class="p-4 font-mono text-sm space-y-1">
+          <div class="flex items-center gap-2 text-navy/70">
+            <span>📁</span> Clients
+          </div>
+          <div class="flex items-center gap-2 text-navy/70 pl-6">
+            <span>📁</span> Acme
+          </div>
+          <div class="flex items-center gap-2 text-navy/60 pl-12">
+            <span>📄</span> proposal.docx
+          </div>
+          <div class="flex items-center gap-2 text-navy/70 mt-2">
+            <span>📁</span> Templates
+          </div>
+          <div class="flex items-center gap-2 text-navy/60 pl-6">
+            <span>📄</span> proposal-template.docx
+          </div>
+        </div>
       </div>
-      <div class="file-tree-content">
-        <div class="file-item folder"><span class="icon">📁</span> Clients</div>
-        <div class="file-item folder indent-1"><span class="icon">📁</span> Acme</div>
-        <div class="file-item file indent-2"><span class="icon">📄</span> proposal.docx</div>
-        <div class="file-item folder"><span class="icon">📁</span> Templates</div>
-        <div class="file-item file indent-1"><span class="icon">📄</span> proposal-template.docx</div>
+      
+      <p class="text-lg mb-4">The Acme proposal was <em>based on</em> the template. But Drive doesn't know that. They're in separate branches.</p>
+      <p class="text-lg mb-8 text-navy/60">Search "proposal" and you get both with no indication of relationship.</p>
+      
+      <div class="bg-red-50 border-l-4 border-red-400 p-5 rounded-r-lg">
+        <p class="font-semibold text-red-800 mb-1">That's keyword search on a tree.</p>
+        <p class="text-red-700">No connections. No context. This is why Drive search feels broken even though you "organized" your files.</p>
       </div>
-    </div>
-    
-    <p>The Acme proposal was <em>based on</em> the template. But Drive doesn't know that. They're in separate branches.</p>
-    <p>Search "proposal" and you get both with no indication of relationship.</p>
-    <div class="callout problem">
-      <p><strong>That's keyword search on a tree.</strong> No connections. No context. This is why Drive search feels broken even though you "organized" your files.</p>
     </div>
   </section>
 
   <!-- Slide 14: Excel -->
-  <section class="slide">
-    <h2>Tools You Know: Excel</h2>
-    <p class="muted">Cell References Are Baby Graph Edges</p>
-    
-    <div class="excel-ui">
-      <div class="excel-tabs">
-        <div class="excel-tab active">Dashboard</div>
-        <div class="excel-tab">Q1 Revenue</div>
-        <div class="excel-tab">Q2 Revenue</div>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <p class="font-mono text-sm uppercase tracking-wide text-navy/40 mb-2">Tools You Know</p>
+      <h2 class="text-3xl md:text-4xl font-bold mb-2">Excel</h2>
+      <p class="text-lg text-navy/60 mb-8">Cell References Are Baby Graph Edges</p>
+      
+      <!-- Excel UI -->
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden mb-8">
+        <div class="flex bg-navy/5 border-b border-navy/10 text-sm">
+          <div class="px-4 py-2 bg-white border-r border-navy/10 font-medium">Dashboard</div>
+          <div class="px-4 py-2 text-navy/60 border-r border-navy/10">Q1 Revenue</div>
+          <div class="px-4 py-2 text-navy/60">Q2 Revenue</div>
+        </div>
+        <div class="font-mono text-sm">
+          <div class="flex border-b border-navy/10 bg-navy/5">
+            <div class="w-12 px-3 py-2 text-center text-navy/40 border-r border-navy/10"></div>
+            <div class="flex-1 px-3 py-2 text-center text-navy/60 border-r border-navy/10">A</div>
+            <div class="flex-1 px-3 py-2 text-center text-navy/60">B</div>
+          </div>
+          <div class="flex border-b border-navy/10">
+            <div class="w-12 px-3 py-2 text-center text-navy/40 bg-navy/5 border-r border-navy/10">1</div>
+            <div class="flex-1 px-3 py-2 border-r border-navy/10">Q1 Total</div>
+            <div class="flex-1 px-3 py-2 text-teal font-medium">='Q1 Revenue'!B12</div>
+          </div>
+          <div class="flex">
+            <div class="w-12 px-3 py-2 text-center text-navy/40 bg-navy/5 border-r border-navy/10">2</div>
+            <div class="flex-1 px-3 py-2 border-r border-navy/10">Q2 Total</div>
+            <div class="flex-1 px-3 py-2 text-teal font-medium">='Q2 Revenue'!B12</div>
+          </div>
+        </div>
       </div>
-      <div class="excel-grid" style="grid-template-columns: 100px 150px 120px;">
-        <div class="excel-row">
-          <div class="excel-cell header"></div>
-          <div class="excel-cell header">A</div>
-          <div class="excel-cell header">B</div>
-        </div>
-        <div class="excel-row">
-          <div class="excel-cell header">1</div>
-          <div class="excel-cell">Q1 Total</div>
-          <div class="excel-cell formula">='Q1 Revenue'!B12</div>
-        </div>
-        <div class="excel-row">
-          <div class="excel-cell header">2</div>
-          <div class="excel-cell">Q2 Total</div>
-          <div class="excel-cell formula">='Q2 Revenue'!B12</div>
-        </div>
+      
+      <p class="text-lg mb-4">When you write <code class="font-mono bg-navy/5 px-2 py-1 rounded text-teal-dark">='Q1 Revenue'!B12</code> you're creating a <span class="font-semibold text-teal">connection</span> between sheets.</p>
+      <p class="text-lg mb-8 text-navy/70">Now your Dashboard "knows about" Q1 Revenue. Change B12, Dashboard updates.</p>
+      
+      <div class="bg-teal/10 border-l-4 border-teal p-5 rounded-r-lg">
+        <p class="font-semibold text-teal-dark mb-1">VLOOKUP and INDEX-MATCH are traversal tools.</p>
+        <p class="text-navy/70">"Go find the row where column A matches this value, then grab column C." That's graph traversal. People who are "good at Excel" have intuition for connections and traversal.</p>
       </div>
-    </div>
-    
-    <p>When you write <code>='Q1 Revenue'!B12</code> you're creating a <strong>connection</strong> between sheets.</p>
-    <p>Now your Dashboard "knows about" Q1 Revenue. Change B12, Dashboard updates.</p>
-    <div class="callout insight">
-      <p><strong>VLOOKUP and INDEX-MATCH are traversal tools.</strong> "Go find the row where column A matches this value, then grab column C." That's graph traversal. People who are "good at Excel" have intuition for connections and traversal.</p>
     </div>
   </section>
 
   <!-- Slide 15: Notion -->
-  <section class="slide">
-    <h2>Tools You Know: Notion</h2>
-    <p class="muted">Database Relations Are Explicit Graph Edges</p>
-    
-    <div class="db-ui">
-      <div class="db-header">
-        <span class="icon">📊</span> Projects
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <p class="font-mono text-sm uppercase tracking-wide text-navy/40 mb-2">Tools You Know</p>
+      <h2 class="text-3xl md:text-4xl font-bold mb-2">Notion</h2>
+      <p class="text-lg text-navy/60 mb-8">Database Relations Are Explicit Graph Edges</p>
+      
+      <!-- Notion DB UI -->
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden mb-8">
+        <div class="bg-navy/5 px-4 py-3 flex items-center gap-2 border-b border-navy/10">
+          <span class="text-lg">📊</span>
+          <span class="font-semibold">Projects</span>
+        </div>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-navy/5">
+              <th class="px-4 py-3 text-left font-mono text-xs uppercase tracking-wide text-navy/60">Name</th>
+              <th class="px-4 py-3 text-left font-mono text-xs uppercase tracking-wide text-navy/60">Client</th>
+              <th class="px-4 py-3 text-left font-mono text-xs uppercase tracking-wide text-navy/60">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-navy/10">
+            <tr>
+              <td class="px-4 py-3">API Integration</td>
+              <td class="px-4 py-3"><span class="text-teal underline underline-offset-2">→ Acme Corp</span></td>
+              <td class="px-4 py-3"><span class="bg-teal/20 text-teal-dark px-2 py-0.5 rounded text-xs font-medium">Active</span></td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3">Phase 2 Pilot</td>
+              <td class="px-4 py-3"><span class="text-teal underline underline-offset-2">→ TechStart</span></td>
+              <td class="px-4 py-3"><span class="bg-navy/10 text-navy/70 px-2 py-0.5 rounded text-xs font-medium">Planning</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <table class="db-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Client</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>API Integration</td>
-            <td><span class="db-relation">→ Acme Corp</span></td>
-            <td><span class="db-tag">Active</span></td>
-          </tr>
-          <tr>
-            <td>Phase 2 Pilot</td>
-            <td><span class="db-relation">→ TechStart</span></td>
-            <td><span class="db-tag">Planning</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    
-    <p>When you create a <strong>Relation</strong> between databases, you're building the graph.</p>
-    <p>Now "show me all tasks for Acme's projects" is a <em>traversal</em>, not a search.</p>
-    <div class="callout insight">
-      <p><strong>Linked Database Views</strong> = same data, different projection. Sales sees clients → deals. Delivery sees projects → tasks. Same underlying graph, different trees on top.</p>
+      
+      <p class="text-lg mb-4">When you create a <span class="font-semibold text-teal">Relation</span> between databases, you're building the graph.</p>
+      <p class="text-lg mb-8 text-navy/70">Now "show me all tasks for Acme's projects" is a <em>traversal</em>, not a search.</p>
+      
+      <div class="bg-teal/10 border-l-4 border-teal p-5 rounded-r-lg">
+        <p class="font-semibold text-teal-dark mb-1">Linked Database Views = same data, different projection.</p>
+        <p class="text-navy/70">Sales sees clients → deals. Delivery sees projects → tasks. Same underlying graph, different trees on top.</p>
+      </div>
     </div>
   </section>
 
   <!-- Slide 16: Obsidian -->
-  <section class="slide">
-    <h2>Tools You Know: Obsidian</h2>
-    <p class="muted">Wiki Links Are Graph Edges</p>
-    
-    <div class="chat-ui">
-      <div class="chat-header">Meeting Notes.md</div>
-      <div class="chat-messages" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
-        <div style="color: var(--fg);">
-          # Meeting with <span style="color: var(--accent);">[[Sarah]]</span> about <span style="color: var(--accent);">[[Acme Pilot]]</span><br><br>
-          Discussed the <span style="color: var(--accent);">[[API Timeout Bug]]</span> - similar to what we saw in <span style="color: var(--accent);">[[TechStart Phase 1]]</span>.
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <p class="font-mono text-sm uppercase tracking-wide text-navy/40 mb-2">Tools You Know</p>
+      <h2 class="text-3xl md:text-4xl font-bold mb-2">Obsidian</h2>
+      <p class="text-lg text-navy/60 mb-8">Wiki Links Are Graph Edges</p>
+      
+      <!-- Markdown preview -->
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden mb-8">
+        <div class="bg-navy/5 px-4 py-3 border-b border-navy/10">
+          <span class="font-mono text-sm text-navy/60">Meeting Notes.md</span>
+        </div>
+        <div class="p-5 font-mono text-sm leading-relaxed">
+          <p class="text-navy mb-2"># Meeting with <span class="text-teal bg-teal/10 px-1 rounded">[[Sarah]]</span> about <span class="text-teal bg-teal/10 px-1 rounded">[[Acme Pilot]]</span></p>
+          <p class="text-navy">Discussed the <span class="text-teal bg-teal/10 px-1 rounded">[[API Timeout Bug]]</span> - similar to what we saw in <span class="text-teal bg-teal/10 px-1 rounded">[[TechStart Phase 1]]</span>.</p>
         </div>
       </div>
-    </div>
-    
-    <p>Every <code>[[link]]</code> is a graph edge. Obsidian's Graph View literally shows you this.</p>
-    
-    <div class="callout insight">
-      <p><strong>Tags</strong> are another connection layer: <code>#client</code> <code>#issue</code> <code>#resolved</code></p>
-      <p><strong>Folders</strong> give you tree structure on top of the graph.</p>
-      <p style="margin-bottom: 0;">The people who love Obsidian have internalized: <strong>links > folders</strong>. Folders are for your brain. Links are for traversal.</p>
+      
+      <p class="text-lg mb-8">Every <code class="font-mono bg-navy/5 px-2 py-1 rounded text-teal-dark">[[link]]</code> is a graph edge. Obsidian's Graph View literally shows you this.</p>
+      
+      <div class="bg-teal/10 border-l-4 border-teal p-5 rounded-r-lg">
+        <p class="mb-2"><span class="font-semibold text-teal-dark">Tags</span> are another connection layer: <code class="text-xs">#client</code> <code class="text-xs">#issue</code> <code class="text-xs">#resolved</code></p>
+        <p class="mb-2"><span class="font-semibold text-teal-dark">Folders</span> give you tree structure on top of the graph.</p>
+        <p class="text-navy/70">The people who love Obsidian have internalized: <strong>links > folders</strong>. Folders are for your brain. Links are for traversal.</p>
+      </div>
     </div>
   </section>
 
   <!-- Slide 17: Conversation Threads -->
-  <section class="slide">
-    <h2>The Pain Lucas Feels</h2>
-    <p class="muted">Conversation Threads: Isolated Trees</p>
-    
-    <div class="comparison">
-      <div class="chat-ui" style="margin: 0;">
-        <div class="chat-header">Thread 1: Course Pricing</div>
-        <div class="chat-messages">
-          <div class="chat-msg user">How much?</div>
-          <div class="chat-msg ai">$299-500...</div>
-          <div class="chat-msg user">Enterprise?</div>
-          <div class="chat-msg ai">$35K/10...</div>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-2">The Pain Lucas Feels</h2>
+      <p class="text-lg text-navy/60 mb-8">Conversation Threads: Isolated Trees</p>
+      
+      <div class="grid md:grid-cols-2 gap-4 mb-4">
+        <!-- Thread 1 -->
+        <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden">
+          <div class="bg-navy/5 px-4 py-3 border-b border-navy/10">
+            <span class="font-mono text-sm text-navy/60">Thread 1: Course Pricing</span>
+          </div>
+          <div class="p-4 space-y-2 text-sm">
+            <div class="flex justify-end"><div class="chat-bubble-user bg-teal text-white px-3 py-1.5">How much?</div></div>
+            <div class="flex justify-start"><div class="chat-bubble-ai bg-navy/5 px-3 py-1.5">$299-500...</div></div>
+            <div class="flex justify-end"><div class="chat-bubble-user bg-teal text-white px-3 py-1.5">Enterprise?</div></div>
+            <div class="flex justify-start"><div class="chat-bubble-ai bg-navy/5 px-3 py-1.5">$35K/10...</div></div>
+          </div>
+        </div>
+        <!-- Thread 2 -->
+        <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden">
+          <div class="bg-navy/5 px-4 py-3 border-b border-navy/10">
+            <span class="font-mono text-sm text-navy/60">Thread 2: Acme Issues</span>
+          </div>
+          <div class="p-4 space-y-2 text-sm">
+            <div class="flex justify-end"><div class="chat-bubble-user bg-teal text-white px-3 py-1.5">Bug report</div></div>
+            <div class="flex justify-start"><div class="chat-bubble-ai bg-navy/5 px-3 py-1.5">Looks like...</div></div>
+            <div class="flex justify-end"><div class="chat-bubble-user bg-teal text-white px-3 py-1.5">Similar to TechStart?</div></div>
+            <div class="flex justify-start"><div class="chat-bubble-ai bg-navy/5 px-3 py-1.5">Yes, same...</div></div>
+          </div>
         </div>
       </div>
-      <div class="chat-ui" style="margin: 0;">
-        <div class="chat-header">Thread 2: Acme Issues</div>
-        <div class="chat-messages">
-          <div class="chat-msg user">Bug report</div>
-          <div class="chat-msg ai">Looks like...</div>
-          <div class="chat-msg user">Similar to TechStart?</div>
-          <div class="chat-msg ai">Yes, same...</div>
-        </div>
+      
+      <p class="text-center text-navy/40 mb-6">↑ No connection between these ↑</p>
+      
+      <div class="bg-red-50 border-l-4 border-red-400 p-5 rounded-r-lg">
+        <p class="font-semibold text-red-800 mb-1">This is why Claude "seems worse at reading across conversations."</p>
+        <p class="text-red-700">It's not Claude—it's that conversations are disconnected trees with no edges between them. The AI can't traverse because there's nothing to traverse.</p>
       </div>
-    </div>
-    
-    <p style="text-align: center; color: var(--fg-dim); margin: 1rem 0;">↑ No connection between these ↑</p>
-    
-    <div class="callout problem">
-      <p><strong>This is why Claude "seems worse at reading across conversations."</strong></p>
-      <p style="margin-bottom: 0;">It's not Claude—it's that conversations are disconnected trees with no edges between them. The AI can't traverse because there's nothing to traverse.</p>
     </div>
   </section>
 
   <!-- Slide 18: Slack -->
-  <section class="slide">
-    <h2>Tools You Know: Slack</h2>
-    <p class="muted">Channels Are Trees, Threads Are Branches, Links Are Rare</p>
-    
-    <div class="slack-ui">
-      <div class="slack-sidebar">
-        <div class="slack-channel active"><span class="hash">#</span> sales</div>
-        <div class="slack-channel"><span class="hash">#</span> engineering</div>
-        <div class="slack-channel"><span class="hash">#</span> general</div>
-      </div>
-      <div class="slack-main">
-        <div class="slack-msg">
-          <span class="user">Sarah</span>
-          <span class="time">10:32 AM</span>
-          <div>Acme update: they're seeing timeout issues</div>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <p class="font-mono text-sm uppercase tracking-wide text-navy/40 mb-2">Tools You Know</p>
+      <h2 class="text-3xl md:text-4xl font-bold mb-2">Slack</h2>
+      <p class="text-lg text-navy/60 mb-8">Channels Are Trees, Threads Are Branches, Links Are Rare</p>
+      
+      <!-- Slack UI -->
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-hidden mb-8 flex">
+        <div class="w-44 bg-navy/5 border-r border-navy/10 p-3">
+          <div class="text-xs font-mono uppercase tracking-wide text-navy/40 mb-2">Channels</div>
+          <div class="bg-teal/10 text-teal-dark px-2 py-1 rounded text-sm font-medium mb-1"># sales</div>
+          <div class="text-navy/60 px-2 py-1 text-sm"># engineering</div>
+          <div class="text-navy/60 px-2 py-1 text-sm"># general</div>
         </div>
-        <div class="slack-thread">
-          <div class="slack-msg">
-            <span class="user">Mike</span>
-            <span class="time">10:45 AM</span>
-            <div>Same thing engineering is tracking?</div>
+        <div class="flex-1 p-4">
+          <div class="text-sm mb-3">
+            <span class="font-semibold">Sarah</span>
+            <span class="text-navy/40 text-xs ml-2">10:32 AM</span>
+            <p class="text-navy/80">Acme update: they're seeing timeout issues</p>
+          </div>
+          <div class="border-l-2 border-navy/20 pl-3 ml-2 text-sm">
+            <span class="font-semibold">Mike</span>
+            <span class="text-navy/40 text-xs ml-2">10:45 AM</span>
+            <p class="text-navy/70">Same thing engineering is tracking?</p>
           </div>
         </div>
       </div>
-    </div>
-    
-    <p>The Acme update in #sales mentions the timeout bug being discussed in #engineering. But Slack doesn't connect them.</p>
-    <div class="callout problem">
-      <p><strong>Slack search is keyword-only across isolated trees.</strong> This is why "finding that thing someone said" is painful. Cross-posting is a weak edge. Linking to a message is a real edge, but people rarely do it.</p>
+      
+      <p class="text-lg mb-4">The Acme update in #sales mentions the timeout bug being discussed in #engineering. But Slack doesn't connect them.</p>
+      
+      <div class="bg-red-50 border-l-4 border-red-400 p-5 rounded-r-lg">
+        <p class="font-semibold text-red-800 mb-1">Slack search is keyword-only across isolated trees.</p>
+        <p class="text-red-700">This is why "finding that thing someone said" is painful. Cross-posting is a weak edge. Linking to a message is a real edge, but people rarely do it.</p>
+      </div>
     </div>
   </section>
 
-  <!-- Slide 19: Tool Summary -->
-  <section class="slide">
-    <h2>The Pattern</h2>
-    
-    <table class="tool-table">
-      <thead>
-        <tr>
-          <th>Tool</th>
-          <th>Structure</th>
-          <th>Connections</th>
-          <th>AI Retrieval</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="tool-name">Google Drive</td>
-          <td>Tree (folders)</td>
-          <td>None</td>
-          <td class="quality-bad">Keyword lottery</td>
-        </tr>
-        <tr>
-          <td class="tool-name">Email</td>
-          <td>Tree (folders)</td>
-          <td>None</td>
-          <td class="quality-bad">Keyword lottery</td>
-        </tr>
-        <tr>
-          <td class="tool-name">Slack</td>
-          <td>Tree (channels)</td>
-          <td>Rare links</td>
-          <td class="quality-bad">Mostly keyword</td>
-        </tr>
-        <tr>
-          <td class="tool-name">Conversations</td>
-          <td>Tree (threads)</td>
-          <td>None</td>
-          <td class="quality-ok">Keyword + embedding</td>
-        </tr>
-        <tr>
-          <td class="tool-name">Excel</td>
-          <td>Tree (sheets)</td>
-          <td>Cell refs, lookups</td>
-          <td class="quality-ok">Limited traversal</td>
-        </tr>
-        <tr>
-          <td class="tool-name">Obsidian</td>
-          <td>Tree + Graph</td>
-          <td>[[Links]], tags</td>
-          <td class="quality-good">Good traversal</td>
-        </tr>
-        <tr>
-          <td class="tool-name">Notion</td>
-          <td>Tree + Graph</td>
-          <td>Relations, backlinks</td>
-          <td class="quality-good">Good traversal</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <div class="callout insight">
-      <p><strong>Tools with explicit connections enable traversal. Tools without connections force keyword search.</strong></p>
-      <p style="margin-bottom: 0;">Lucas already uses Notion with relations. His structure is better than most. The question is: Are conversations being captured into the graph, or staying isolated?</p>
+  <!-- Slide 19: Tool Pattern -->
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">The Pattern</h2>
+      
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="bg-navy/5">
+              <th class="px-5 py-4 font-mono text-xs uppercase tracking-wide text-navy/60">Tool</th>
+              <th class="px-5 py-4 font-mono text-xs uppercase tracking-wide text-navy/60">Structure</th>
+              <th class="px-5 py-4 font-mono text-xs uppercase tracking-wide text-navy/60">Connections</th>
+              <th class="px-5 py-4 font-mono text-xs uppercase tracking-wide text-navy/60">AI Retrieval</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-navy/10">
+            <tr>
+              <td class="px-5 py-3 font-semibold">Google Drive</td>
+              <td class="px-5 py-3 text-navy/70">Tree (folders)</td>
+              <td class="px-5 py-3 text-navy/70">None</td>
+              <td class="px-5 py-3 text-red-500">Keyword lottery</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3 font-semibold">Email</td>
+              <td class="px-5 py-3 text-navy/70">Tree (folders)</td>
+              <td class="px-5 py-3 text-navy/70">None</td>
+              <td class="px-5 py-3 text-red-500">Keyword lottery</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3 font-semibold">Slack</td>
+              <td class="px-5 py-3 text-navy/70">Tree (channels)</td>
+              <td class="px-5 py-3 text-navy/70">Rare links</td>
+              <td class="px-5 py-3 text-red-500">Mostly keyword</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3 font-semibold">Conversations</td>
+              <td class="px-5 py-3 text-navy/70">Tree (threads)</td>
+              <td class="px-5 py-3 text-navy/70">None</td>
+              <td class="px-5 py-3 text-navy/50">Keyword + embedding</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3 font-semibold">Excel</td>
+              <td class="px-5 py-3 text-navy/70">Tree (sheets)</td>
+              <td class="px-5 py-3 text-navy/70">Cell refs, lookups</td>
+              <td class="px-5 py-3 text-navy/50">Limited traversal</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3 font-semibold">Obsidian</td>
+              <td class="px-5 py-3 text-navy/70">Tree + Graph</td>
+              <td class="px-5 py-3 text-teal">[[Links]], tags</td>
+              <td class="px-5 py-3 text-teal font-medium">Good traversal</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3 font-semibold">Notion</td>
+              <td class="px-5 py-3 text-navy/70">Tree + Graph</td>
+              <td class="px-5 py-3 text-teal">Relations, backlinks</td>
+              <td class="px-5 py-3 text-teal font-medium">Good traversal</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="mt-8 bg-teal/10 border-l-4 border-teal p-5 rounded-r-lg">
+        <p class="font-semibold text-teal-dark mb-1">Tools with explicit connections enable traversal. Tools without connections force keyword search.</p>
+        <p class="text-navy/70">Lucas already uses Notion with relations. His structure is better than most. The question is: Are conversations being captured into the graph, or staying isolated?</p>
+      </div>
     </div>
   </section>
 
   <!-- Slide 20: Bottom Line #1 -->
-  <section class="slide">
-    <h2>The Bottom Line</h2>
-    <p>His frustration is real. Claude doesn't magically read across conversations well.</p>
-    <p>But the answer isn't "find a better AI."</p>
-    
-    <div class="bottom-line">
-      <h4>The answer is:</h4>
-      <ol>
-        <li><strong>Your conversations need structure</strong> (even just titles/tags)</li>
-        <li><strong>Related threads need to be linked</strong> (not just floating in history)</li>
-        <li><strong>Your tree gives context</strong> that makes every chunk more meaningful</li>
-        <li><strong>Graphs let you traverse</strong> when the question crosses branches</li>
-      </ol>
-      <p class="final-statement">The AI can only be as good as the structure you give it to work with.</p>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">The Bottom Line</h2>
+      
+      <p class="text-lg mb-4">His frustration is real. Claude doesn't magically read across conversations well.</p>
+      <p class="text-lg mb-8 text-navy/60">But the answer isn't "find a better AI."</p>
+      
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 border-l-4 border-l-teal p-6">
+        <p class="font-mono text-xs uppercase tracking-wide text-teal-dark mb-4">The answer is:</p>
+        <ol class="space-y-3 text-lg">
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">1</span>
+            <span><strong class="text-navy">Your conversations need structure</strong> <span class="text-navy/60">(even just titles/tags)</span></span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">2</span>
+            <span><strong class="text-navy">Related threads need to be linked</strong> <span class="text-navy/60">(not just floating in history)</span></span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">3</span>
+            <span><strong class="text-navy">Your tree gives context</strong> <span class="text-navy/60">that makes every chunk more meaningful</span></span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">4</span>
+            <span><strong class="text-navy">Graphs let you traverse</strong> <span class="text-navy/60">when the question crosses branches</span></span>
+          </li>
+        </ol>
+        <div class="mt-6 pt-6 border-t border-navy/10 text-center">
+          <p class="text-xl font-semibold text-navy">The AI can only be as good as the structure you give it to work with.</p>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- Slide 21: Agent Loop -->
-  <section class="slide">
-    <h2>Going Deeper: The Agent Loop</h2>
-    <p>When an AI agent answers your question, it's not one grab. It's a loop—and quality depends on what tools it has.</p>
-    
-    <div class="flow-diagram">
-      <div class="flow-step">Is the answer already in my context?</div>
-      <div class="flow-arrow">↓ no / uncertain</div>
-      <div class="flow-step highlight">
-        What tools do I have? (ranked by connectedness)
-        <ol style="margin: 0.75rem 0 0 1.5rem; font-size: 0.85rem;">
-          <li>Graph traversal (best)</li>
-          <li>Tree-aware search</li>
-          <li>Embedding search</li>
-          <li>Keyword search (worst)</li>
-        </ol>
-      </div>
-      <div class="flow-arrow">↓</div>
-      <div class="flow-step">Try most connected tool → Got results?</div>
-      <div class="flow-branch">
-        <div>
-          <div class="flow-arrow">↓ yes</div>
-          <div class="flow-step">Enough to answer well?</div>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Going Deeper: The Agent Loop</h2>
+      
+      <p class="text-lg mb-8">When an AI agent answers your question, it's not one grab. It's a loop—and quality depends on what tools it has.</p>
+      
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 p-6 space-y-3">
+        <div class="bg-navy/5 rounded-lg p-4 text-center">
+          Is the answer already in my context?
         </div>
-        <div>
-          <div class="flow-arrow">↓ no</div>
-          <div class="flow-step">Fall back to next tool</div>
+        <div class="text-center text-navy/40">↓ no / uncertain</div>
+        <div class="bg-teal/10 border border-teal/30 rounded-lg p-4">
+          <p class="font-semibold text-teal-dark mb-2">What tools do I have? (ranked by connectedness)</p>
+          <ol class="text-sm space-y-1 text-navy/70 ml-4">
+            <li>1. Graph traversal (best)</li>
+            <li>2. Tree-aware search</li>
+            <li>3. Embedding search</li>
+            <li>4. Keyword search (worst)</li>
+          </ol>
+        </div>
+        <div class="text-center text-navy/40">↓</div>
+        <div class="bg-navy/5 rounded-lg p-4 text-center">
+          Try most connected tool → Got results?
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="text-center">
+            <div class="text-navy/40 mb-2">↓ yes</div>
+            <div class="bg-navy/5 rounded-lg p-3 text-sm">Enough to answer well?</div>
+          </div>
+          <div class="text-center">
+            <div class="text-navy/40 mb-2">↓ no</div>
+            <div class="bg-navy/5 rounded-lg p-3 text-sm">Fall back to next tool</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Slide 22: Better Tools -->
-  <section class="slide">
-    <h2>Better Tools = Better Judgment</h2>
-    <p>Your ability to know "do I have enough?" depends on how good your tools are.</p>
-    
-    <div class="comparison">
-      <div class="comparison-item">
-        <h4>With graph traversal</h4>
-        <p>"I found the client, followed edges to their issues, found similar past issues, have the resolution. <strong style="color: var(--success);">Yes, I have enough.</strong>"</p>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Better Tools = Better Judgment</h2>
+      
+      <p class="text-lg mb-8">Your ability to know "do I have enough?" depends on how good your tools are.</p>
+      
+      <div class="grid md:grid-cols-2 gap-4 mb-8">
+        <div class="bg-teal/10 rounded-xl p-5 border border-teal/20">
+          <p class="font-mono text-xs uppercase tracking-wide text-teal-dark mb-3">With graph traversal</p>
+          <p class="text-navy/80">"I found the client, followed edges to their issues, found similar past issues, have the resolution. <span class="font-semibold text-teal-dark">Yes, I have enough.</span>"</p>
+        </div>
+        <div class="bg-red-50 rounded-xl p-5 border border-red-100">
+          <p class="font-mono text-xs uppercase tracking-wide text-red-700 mb-3">With keyword search</p>
+          <p class="text-navy/70">"I found 12 chunks with the word 'timeout.' Maybe one of these is relevant? <span class="font-semibold text-red-600">Hard to know.</span>"</p>
+        </div>
       </div>
-      <div class="comparison-item">
-        <h4>With keyword search</h4>
-        <p>"I found 12 chunks with the word 'timeout.' Maybe one of these is relevant? <strong style="color: var(--error);">Hard to know.</strong>"</p>
+      
+      <div class="bg-teal/10 border-l-4 border-teal p-5 rounded-r-lg">
+        <p class="font-semibold text-teal-dark mb-1">This is why structure matters.</p>
+        <p class="text-navy/70">Without it, the agent only has the bottom-tier tools. Every retrieval is a keyword lottery.</p>
       </div>
-    </div>
-    
-    <div class="callout insight">
-      <p><strong>This is why structure matters.</strong> Without it, the agent only has the bottom-tier tools. Every retrieval is a keyword lottery.</p>
     </div>
   </section>
 
   <!-- Slide 23: Two Modes -->
-  <section class="slide">
-    <h2>When Does This Happen?</h2>
-    
-    <div class="comparison">
-      <div class="comparison-item">
-        <h4>Query Time (Synchronous)</h4>
-        <p>User asks → Agent runs the loop → Retrieves → Answers</p>
-        <p><strong style="color: var(--success);">Pro:</strong> Always fresh, responds to exact question</p>
-        <p><strong style="color: var(--error);">Con:</strong> Slow, expensive, does the work every time</p>
-        <p class="muted" style="font-size: 0.9rem; margin-bottom: 0;">This is what most AI chat does today.</p>
-      </div>
-      <div class="comparison-item">
-        <h4>Post-Processing Time (Async)</h4>
-        <p>After events happen, system updates <strong>layers</strong> of enriched context</p>
-        <p><strong style="color: var(--success);">Pro:</strong> Fast retrieval, pre-built connections</p>
-        <p><strong style="color: var(--error);">Con:</strong> Requires intentional structure upfront</p>
-        <p class="muted" style="font-size: 0.9rem; margin-bottom: 0;">This is where the leverage is.</p>
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">When Does This Happen?</h2>
+      
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl shadow-md border border-navy/10 p-5">
+          <p class="font-mono text-xs uppercase tracking-wide text-navy/40 mb-3">Query Time (Synchronous)</p>
+          <p class="text-navy/80 mb-4">User asks → Agent runs the loop → Retrieves → Answers</p>
+          <p class="text-sm"><span class="text-teal font-medium">Pro:</span> <span class="text-navy/60">Always fresh, responds to exact question</span></p>
+          <p class="text-sm"><span class="text-red-500 font-medium">Con:</span> <span class="text-navy/60">Slow, expensive, does the work every time</span></p>
+          <p class="text-xs text-navy/40 mt-3">This is what most AI chat does today.</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-md border border-navy/10 p-5">
+          <p class="font-mono text-xs uppercase tracking-wide text-navy/40 mb-3">Post-Processing Time (Async)</p>
+          <p class="text-navy/80 mb-4">After events happen, system updates <strong>layers</strong> of enriched context</p>
+          <p class="text-sm"><span class="text-teal font-medium">Pro:</span> <span class="text-navy/60">Fast retrieval, pre-built connections</span></p>
+          <p class="text-sm"><span class="text-red-500 font-medium">Con:</span> <span class="text-navy/60">Requires intentional structure upfront</span></p>
+          <p class="text-xs text-navy/40 mt-3">This is where the leverage is.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- Slide 24: Layers -->
-  <section class="slide">
-    <h2>The Layers</h2>
-    <p class="muted">Query time hits pre-built context, not raw chunks</p>
-    
-    <div class="flow-diagram">
-      <div class="flow-step" style="text-align: center; font-weight: 500;">
-        "What do we know about Acme's technical issues?"
-      </div>
-      <div class="flow-arrow">↓</div>
-      <div class="flow-step highlight">
-        <strong>Connection Layer</strong><br>
-        <span style="color: var(--fg-muted); font-size: 0.9rem;">
-          Acme → issues: [timeout-bug, login-failure]<br>
-          timeout-bug → similar: [techstart-redis-issue]
-        </span>
-      </div>
-      <div class="flow-arrow">↓</div>
-      <div class="flow-step highlight">
-        <strong>Summary Layer</strong><br>
-        <span style="color: var(--fg-muted); font-size: 0.9rem;">
-          timeout-bug: "API timeouts on large batches, workaround available, similar to resolved TechStart issue"
-        </span>
-      </div>
-      <div class="flow-arrow">↓</div>
-      <div class="flow-step highlight">
-        <strong>Context Layer</strong><br>
-        <span style="color: var(--fg-muted); font-size: 0.9rem;">
-          tree: Clients/Acme/Issues<br>
-          business: Q1 pilot, expansion decision pending
-        </span>
-      </div>
-      <div class="flow-arrow">↓</div>
-      <div class="flow-step" style="opacity: 0.5;">
-        <strong>Raw Chunks</strong> (only if layers don't have enough)
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-2">The Layers</h2>
+      <p class="text-lg text-navy/60 mb-8">Query time hits pre-built context, not raw chunks</p>
+      
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 p-6 space-y-3">
+        <div class="bg-navy/5 rounded-lg p-4 text-center font-medium">
+          "What do we know about Acme's technical issues?"
+        </div>
+        <div class="text-center text-navy/40">↓</div>
+        <div class="bg-teal/10 border border-teal/30 rounded-lg p-4">
+          <p class="font-semibold text-teal-dark mb-1">Connection Layer</p>
+          <p class="text-sm text-navy/60 font-mono">Acme → issues: [timeout-bug, login-failure]<br>timeout-bug → similar: [techstart-redis-issue]</p>
+        </div>
+        <div class="text-center text-navy/40">↓</div>
+        <div class="bg-teal/10 border border-teal/30 rounded-lg p-4">
+          <p class="font-semibold text-teal-dark mb-1">Summary Layer</p>
+          <p class="text-sm text-navy/60 font-mono">timeout-bug: "API timeouts on large batches, workaround available, similar to resolved TechStart issue"</p>
+        </div>
+        <div class="text-center text-navy/40">↓</div>
+        <div class="bg-teal/10 border border-teal/30 rounded-lg p-4">
+          <p class="font-semibold text-teal-dark mb-1">Context Layer</p>
+          <p class="text-sm text-navy/60 font-mono">tree: Clients/Acme/Issues<br>business: Q1 pilot, expansion decision pending</p>
+        </div>
+        <div class="text-center text-navy/40">↓</div>
+        <div class="bg-navy/5 rounded-lg p-4 text-center text-navy/50">
+          <p class="font-semibold">Raw Chunks</p>
+          <p class="text-sm">(only if layers don't have enough)</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Slide 25: Why This Matters -->
-  <section class="slide">
-    <h2>Layers = Intentionality Made Concrete</h2>
-    <p>You decide:</p>
-    <ul>
-      <li>What gets summarized?</li>
-      <li>What connections matter?</li>
-      <li>What context should persist?</li>
-    </ul>
-    <p>Then the system maintains those layers. And queries hit rich, pre-processed knowledge—not a pile of raw chunks.</p>
-    
-    <div class="comparison">
-      <div class="comparison-item">
-        <h4>Without intentional structure</h4>
-        <ul>
-          <li>No meaningful layers can be built</li>
-          <li>Every query starts from scratch</li>
-          <li>Quality is inconsistent</li>
-        </ul>
-      </div>
-      <div class="comparison-item">
-        <h4>With intentional structure</h4>
-        <ul>
-          <li>Layers reflect your mental model</li>
-          <li>Post-processing keeps them current</li>
-          <li>Queries are fast and contextualized</li>
-        </ul>
+  <!-- Slide 25: Intentionality Concrete -->
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">Layers = Intentionality Made Concrete</h2>
+      
+      <p class="text-lg mb-4">You decide:</p>
+      <ul class="space-y-2 text-lg mb-8">
+        <li class="flex items-start gap-3"><span class="text-teal">•</span> What gets summarized?</li>
+        <li class="flex items-start gap-3"><span class="text-teal">•</span> What connections matter?</li>
+        <li class="flex items-start gap-3"><span class="text-teal">•</span> What context should persist?</li>
+      </ul>
+      
+      <p class="text-lg mb-8 text-navy/70">Then the system maintains those layers. And queries hit rich, pre-processed knowledge—not a pile of raw chunks.</p>
+      
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-red-50 rounded-xl p-5 border border-red-100">
+          <p class="font-mono text-xs uppercase tracking-wide text-red-700 mb-3">Without intentional structure</p>
+          <ul class="space-y-1 text-navy/70">
+            <li>• No meaningful layers can be built</li>
+            <li>• Every query starts from scratch</li>
+            <li>• Quality is inconsistent</li>
+          </ul>
+        </div>
+        <div class="bg-teal/10 rounded-xl p-5 border border-teal/20">
+          <p class="font-mono text-xs uppercase tracking-wide text-teal-dark mb-3">With intentional structure</p>
+          <ul class="space-y-1 text-navy/80">
+            <li>• Layers reflect your mental model</li>
+            <li>• Post-processing keeps them current</li>
+            <li>• Queries are fast and contextualized</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Slide 26: Final Bottom Line -->
-  <section class="slide">
-    <h2>The Complete Picture</h2>
-    <p>Most people think about AI retrieval as:</p>
-    <p class="quote">"I have stuff. AI searches stuff. AI answers."</p>
-    <p>The reality for good retrieval:</p>
-    <p class="quote" style="border-color: var(--success);">"I have stuff. System enriches stuff into layers. Layers stay updated. AI queries layers. AI answers well."</p>
-    
-    <div class="bottom-line">
-      <h4>The answer is:</h4>
-      <ol>
-        <li><strong>Your conversations need structure</strong> (even just titles/tags)</li>
-        <li><strong>Related threads need to be linked</strong> (not just floating in history)</li>
-        <li><strong>Your tree gives context</strong> that makes every chunk more meaningful</li>
-        <li><strong>Graphs let you traverse</strong> when the question crosses branches</li>
-        <li><strong>Layers can be built</strong> that pre-process this context so retrieval is fast and good</li>
-      </ol>
-      <p class="final-statement">The AI can only be as good as the structure you give it to work with—and the layers you build on top of that structure.</p>
+  <!-- Slide 26: Final -->
+  <section class="slide flex flex-col justify-center px-6 py-20">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold mb-8">The Complete Picture</h2>
+      
+      <p class="text-lg mb-3">Most people think about AI retrieval as:</p>
+      <blockquote class="border-l-4 border-navy/20 pl-6 mb-8 text-lg text-navy/60 italic">
+        "I have stuff. AI searches stuff. AI answers."
+      </blockquote>
+      
+      <p class="text-lg mb-3">The reality for good retrieval:</p>
+      <blockquote class="border-l-4 border-teal pl-6 mb-10 text-lg text-navy/80 italic">
+        "I have stuff. System enriches stuff into layers. Layers stay updated. AI queries layers. AI answers well."
+      </blockquote>
+      
+      <div class="bg-white rounded-2xl shadow-lg border border-navy/10 border-l-4 border-l-teal p-6">
+        <p class="font-mono text-xs uppercase tracking-wide text-teal-dark mb-4">The answer is:</p>
+        <ol class="space-y-3 text-lg">
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">1</span>
+            <span><strong class="text-navy">Your conversations need structure</strong></span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">2</span>
+            <span><strong class="text-navy">Related threads need to be linked</strong></span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">3</span>
+            <span><strong class="text-navy">Your tree gives context</strong></span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">4</span>
+            <span><strong class="text-navy">Graphs let you traverse</strong></span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-teal text-white flex items-center justify-center text-sm font-semibold">5</span>
+            <span><strong class="text-navy">Layers can be built</strong> <span class="text-navy/60">that pre-process this context</span></span>
+          </li>
+        </ol>
+        <div class="mt-6 pt-6 border-t border-navy/10 text-center">
+          <p class="text-xl font-semibold text-navy">The AI can only be as good as the structure you give it to work with—and the layers you build on top of that structure.</p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <nav class="nav">
-    <button onclick="scrollPrev()" title="Previous (↑ or k)">↑</button>
-    <button onclick="scrollNext()" title="Next (↓ or j)">↓</button>
+  <!-- Navigation -->
+  <nav class="fixed bottom-6 right-6 flex gap-2 z-50">
+    <button onclick="scrollPrev()" class="w-11 h-11 rounded-full bg-white shadow-lg border border-navy/10 text-navy hover:bg-teal hover:text-white hover:border-teal transition-colors flex items-center justify-center">
+      ↑
+    </button>
+    <button onclick="scrollNext()" class="w-11 h-11 rounded-full bg-white shadow-lg border border-navy/10 text-navy hover:bg-teal hover:text-white hover:border-teal transition-colors flex items-center justify-center">
+      ↓
+    </button>
   </nav>
 
   <script>
@@ -1559,13 +1077,8 @@
       }
     }
 
-    function scrollNext() {
-      scrollToSlide(currentSlide + 1);
-    }
-
-    function scrollPrev() {
-      scrollToSlide(currentSlide - 1);
-    }
+    function scrollNext() { scrollToSlide(currentSlide + 1); }
+    function scrollPrev() { scrollToSlide(currentSlide - 1); }
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -1576,7 +1089,6 @@
     }, { threshold: 0.5 });
 
     slides.forEach(slide => observer.observe(slide));
-
     window.addEventListener('scroll', updateProgress);
     
     document.addEventListener('keydown', (e) => {
